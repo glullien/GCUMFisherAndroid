@@ -558,12 +558,16 @@ public class WelcomeActivity extends Activity {
         updateSendButton();
     }
 
+    /**
+     * Set street textfield content and color
+     */
     void setStreetTextView(@NonNull CharSequence text, int color) {
         final TextView streetTextView = getStreetTextView();
         streetTextView.setText(text);
         streetTextView.setTextColor(getResources().getColor(color));
     }
 
+    @NonNull
     TextView getStreetTextView() {
         return ((TextView) findViewById(R.id.street));
     }
