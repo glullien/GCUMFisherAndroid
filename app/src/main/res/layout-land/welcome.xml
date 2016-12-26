@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:columnCount="1"
+    android:paddingBottom="5dp"
+    android:paddingLeft="5dp"
+    android:paddingRight="5dp"
+    android:paddingTop="5dp"
+    tools:context="gcum.gcumfisher.WelcomeActivity">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/location"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="5dp"
+        android:baselineAligned="false"
+        android:columnCount="2"
+        android:orientation="horizontal"
+        android:rowCount="1">
+
+        <GridLayout
+            android:id="@+id/photoButtons"
+            android:layout_width="230dp"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:columnCount="1"
+            android:rowCount="3">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:id="@+id/title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentLeft="true"
+                    android:layout_alignParentStart="true"
+                    android:layout_toLeftOf="@id/photosCount"
+                    android:layout_toStartOf="@id/photosCount"
+                    android:text="@string/gcum_spotted"
+                    android:textSize="17sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/photosCount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:layout_alignParentRight="true"
+                    android:textSize="17sp"
+                    android:textStyle="bold" />
+
+            </RelativeLayout>
+
+            <Button
+                android:id="@+id/takePhoto"
+                style="?android:attr/borderlessButtonStyle"
+                android:layout_width="match_parent"
+                android:onClick="takePhoto"
+                android:drawableLeft="@android:drawable/ic_menu_camera"
+                android:drawableStart="@android:drawable/ic_menu_camera"
+                android:text="@string/take_photo" />
+
+            <Button
+                android:id="@+id/usePhoto"
+                style="?android:attr/borderlessButtonStyle"
+                android:layout_width="match_parent"
+                android:onClick="pickPhoto"
+                android:drawableLeft="@android:drawable/ic_menu_gallery"
+                android:drawableStart="@android:drawable/ic_menu_gallery"
+                android:text="@string/use_photo" />
+
+            <Button
+                android:id="@+id/clearPhotos"
+                style="?android:attr/borderlessButtonStyle"
+                android:layout_width="match_parent"
+                android:onClick="clearPhotos"
+                android:drawableLeft="@android:drawable/ic_menu_delete"
+                android:drawableStart="@android:drawable/ic_menu_delete"
+                android:text="@string/erase_photos" />
+
+        </GridLayout>
+
+        <HorizontalScrollView
+            android:id="@+id/imagesScroll"
+            android:layout_width="fill_parent"
+            android:layout_height="match_parent"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:layout_marginStart="5dp"
+            android:layout_marginLeft="5dp"
+            android:layout_marginBottom="5dp"
+            android:layout_marginTop="5dp"
+            android:layout_toEndOf="@id/photoButtons"
+            android:layout_toRightOf="@id/photoButtons"
+            android:background="@android:color/darker_gray"
+            android:fillViewport="true">
+
+            <GridLayout
+                android:id="@+id/images"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingBottom="10dp"
+                android:paddingTop="10dp" />
+
+        </HorizontalScrollView>
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/sendProcess"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="5dp"
+        android:layout_marginEnd="25dp"
+        android:layout_marginLeft="25dp"
+        android:layout_marginRight="25dp"
+        android:layout_marginStart="25dp">
+
+        <Button
+            android:id="@+id/send"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:onClick="send"
+            android:text="@string/send" />
+
+        <TextView
+            android:id="@+id/progress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:layout_alignBaseline="@id/send"
+            android:layout_toEndOf="@id/send"
+            android:layout_toRightOf="@id/send"
+            android:layout_marginLeft="10dp"
+            android:layout_marginStart="10dp"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/location"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/sendProcess"
+        android:layout_marginBottom="5dp">
+
+        <ImageButton
+            android:id="@+id/adjustLocation"
+            style="?android:attr/borderlessButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:onClick="adjustLocation"
+            android:paddingBottom="7dp"
+            android:paddingTop="5dp"
+            android:src="@android:drawable/ic_menu_edit"
+            android:contentDescription="@string/adjust_location" />
+
+        <TextView
+            android:id="@+id/street"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_alignTop="@id/adjustLocation"
+            android:layout_marginEnd="5dp"
+            android:layout_marginRight="5dp"
+            android:layout_toLeftOf="@id/adjustLocation"
+            android:layout_toStartOf="@id/adjustLocation"
+            android:textSize="17sp"
+            android:textStyle="bold" />
+    </RelativeLayout>
+
+</RelativeLayout>

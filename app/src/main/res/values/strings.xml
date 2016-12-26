@@ -1,0 +1,32 @@
+<resources>
+    <string name="app_name">GCUM Fisher</string>
+    <string name="gcum_spotted">Vous avez vu un GCUM ?</string>
+    <string name="take_photo">Prenez une photo</string>
+    <string name="use_photo">Utilisez la galerie</string>
+    <string name="erase_photos">Effacez les images</string>
+    <string name="report">Faire le rapport</string>
+    <string name="set_location">Préciser le lieu</string>
+    <string name="send">Envoyer les photos !</string>
+    <string name="adjust_location">Modifier</string>
+    <string name="gps_calling">Appel du GPS</string>
+    <string name="gps_call_rejected">GPS interdit</string>
+    <string name="location_provider_disabled">%s est désactivé</string>
+    <string name="street_lookup">Recherche de la rue</string>
+    <string name="gps_address_not_found">Adresse GPS non trouvé</string>
+    <string name="not_in_paris">Adresse non parisienne : %s</string>
+    <string name="creating_directories">Création des répertoires</string>
+    <string name="sending_images">Envoi des images %1$d / %2$d</string>
+    <string name="images_sent">Images envoyées</string>
+    <string name="back_to_the_hunt">Retour à la chasse</string>
+    <string name="address_format">%1$s, dans le %2$de"</string>
+    <string name="success">Succès</string>
+    <string name="required_confirmation">Confirmation requise</string>
+    <string name="clear_all_photos_confirmation">Voulez-vous réellement retirer toutes les photos ?</string>
+    <string name="error">Erreur</string>
+    <string name="cannot_take_picture">Appareil photo non trouvé</string>
+    <string name="cannot_save_photo">Erreur d\'écriture</string>
+    <plurals name="age">
+        <item quantity="one">%d jour</item>
+        <item quantity="other">%d jours</item>
+    </plurals>
+</resources>

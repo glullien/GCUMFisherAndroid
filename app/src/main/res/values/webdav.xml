@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="webdav_host">***</string>
+    <string name="webdav_site">***</string>
+    <string name="webdav_root">***</string>
+    <string name="webdav_username">***</string>
+    <string name="webdav_password">***</string>
+</resources>

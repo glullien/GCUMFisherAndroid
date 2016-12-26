@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+    <color name="blackShadow">#FF000000</color>
+    <color name="gray">#999999</color>
+    <color name="red">#FF4081</color>
+    <color name="fadeBlue">#376aff</color>
+
+    <color name="overPrint">@color/white</color>
+    <color name="overPrintShadow">@color/blackShadow</color>
+
+    <color name="removeBackground">@color/red</color>
+    <color name="cancelBackground">@color/fadeBlue</color>
+
+    <color name="error">@color/red</color>
+
+    <color name="address">@color/black</color>
+    <color name="progress">@color/gray</color>
+
+</resources>
