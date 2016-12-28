@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="webdav_host">***</string>
-    <string name="webdav_site">***</string>
-    <string name="webdav_root">***</string>
-    <string name="webdav_username">***</string>
-    <string name="webdav_password">***</string>
+    <string name="webdav_host">cloud.debian-economist.eu</string>
+    <string name="webdav_site">https://cloud.debian-economist.eu</string>
+    <string name="webdav_root">/remote.php/webdav/</string>
+    <string name="webdav_dir">prefpol/Dossier/</string>
 </resources>

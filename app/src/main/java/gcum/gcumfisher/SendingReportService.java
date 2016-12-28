@@ -90,14 +90,15 @@ public class SendingReportService extends IntentService {
         if (intent == null) return;
         final ResultReceiver receiver = intent.getParcelableExtra(RECEIVER);
         try {
-            WebDavAccess webDavAccess = new WebDavAccess(getResources());
+            WebDavAccess webDavAccess = new WebDavAccess(getApplicationContext());
 
             String street = encodeStreet(intent.getStringExtra(STREET));
             String district = encodeDistrict(intent.getIntExtra(DISTRICT, 0));
             List<Photo> images = Photo.fromArrayList(intent.getStringArrayListExtra(IMAGES));
+            String dir = getString(R.string.webdav_dir);
 
-            makeDirs(receiver, webDavAccess, street, district, getEncodedDates(images));
-            transferFiles(receiver, webDavAccess, images, "Dossier/" + district + street);
+            makeDirs(receiver, webDavAccess, dir, street, district, getEncodedDates(images));
+            transferFiles(receiver, webDavAccess, images, dir + district + street);
 
             deliverSuccess(receiver);
         } catch (Exception e) {
@@ -106,11 +107,11 @@ public class SendingReportService extends IntentService {
         }
     }
 
-    private void makeDirs(@NonNull ResultReceiver receiver, @NonNull WebDavAccess webDavAccess, @NonNull String street, @NonNull String district, @NonNull Set<String> dates) throws IOException, DavException {
+    private void makeDirs(@NonNull ResultReceiver receiver, @NonNull WebDavAccess webDavAccess, @NonNull String dir, @NonNull String street, @NonNull String district, @NonNull Set<String> dates) throws IOException, DavException {
         deliverProgress(receiver, getString(R.string.creating_directories));
-        webDavAccess.ensureExists("Dossier/", Arrays.asList(district, street));
+        webDavAccess.ensureExists(dir, Arrays.asList(district, street));
         for (String date : dates)
-            webDavAccess.ensureExists("Dossier/" + district + street, Collections.singletonList(date));
+            webDavAccess.ensureExists(dir + district + street, Collections.singletonList(date));
     }
 
     @NonNull

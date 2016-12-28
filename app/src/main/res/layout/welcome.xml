@@ -32,25 +32,27 @@
             style="?android:attr/borderlessButtonStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:contentDescription="@string/take_photo"
             android:onClick="takePhoto"
-            android:src="@android:drawable/ic_menu_camera"
-            android:contentDescription="@string/take_photo" />
+            android:src="@android:drawable/ic_menu_camera" />
+
         <ImageButton
             android:id="@+id/usePhoto"
             style="?android:attr/borderlessButtonStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:contentDescription="@string/use_photo"
             android:onClick="pickPhoto"
-            android:src="@android:drawable/ic_menu_gallery"
-            android:contentDescription="@string/use_photo" />
+            android:src="@android:drawable/ic_menu_gallery" />
+
         <ImageButton
             android:id="@+id/clearPhotos"
             style="?android:attr/borderlessButtonStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:contentDescription="@string/erase_photos"
             android:onClick="clearPhotos"
-            android:src="@android:drawable/ic_menu_delete"
-            android:contentDescription="@string/erase_photos" />
+            android:src="@android:drawable/ic_menu_delete" />
 
         <TextView
             android:id="@+id/photosCount"
@@ -61,34 +63,55 @@
     <TextView
         android:id="@+id/progress"
         android:layout_width="wrap_content"
-        android:layout_alignParentBottom="true"
         android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
         android:layout_marginBottom="10dp"
         android:layout_marginEnd="25dp"
         android:layout_marginLeft="25dp"
         android:layout_marginRight="25dp"
         android:layout_marginStart="25dp"
         android:textSize="15sp"
-        android:textStyle="bold"/>
+        android:textStyle="bold" />
 
-    <Button
-        android:id="@+id/send"
+    <RelativeLayout
+        android:id="@+id/networkButtons"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_above="@id/progress"
         android:layout_marginBottom="5dp"
-        android:layout_marginEnd="25dp"
-        android:layout_marginLeft="25dp"
-        android:layout_marginRight="25dp"
-        android:layout_marginStart="25dp"
-        android:onClick="send"
-        android:text="@string/send" />
+        android:layout_marginEnd="10dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_marginStart="10dp">
+
+        <Button
+            android:id="@+id/login"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:onClick="login"
+            android:text="@string/login" />
+
+        <Button
+            android:id="@+id/send"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:layout_toEndOf="@id/login"
+            android:layout_toRightOf="@id/login"
+            android:onClick="send"
+            android:text="@string/send" />
+
+    </RelativeLayout>
+
 
     <RelativeLayout
         android:id="@+id/location"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_above="@id/send"
+        android:layout_above="@id/networkButtons"
         android:layout_marginBottom="5dp"
         android:columnCount="3">
 
@@ -99,23 +122,23 @@
             android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"
             android:layout_alignParentRight="true"
-            android:paddingTop="5dp"
-            android:paddingBottom="7dp"
+            android:contentDescription="@string/adjust_location"
             android:onClick="adjustLocation"
-            android:src="@android:drawable/ic_menu_edit"
-            android:contentDescription="@string/adjust_location" />
+            android:paddingBottom="7dp"
+            android:paddingTop="5dp"
+            android:src="@android:drawable/ic_menu_edit" />
 
         <TextView
             android:id="@+id/street"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignTop="@id/adjustLocation"
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true"
+            android:layout_alignTop="@id/adjustLocation"
+            android:layout_marginEnd="5dp"
+            android:layout_marginRight="5dp"
             android:layout_toLeftOf="@id/adjustLocation"
             android:layout_toStartOf="@id/adjustLocation"
-            android:layout_marginRight="5dp"
-            android:layout_marginEnd="5dp"
             android:textSize="17sp"
             android:textStyle="bold" />
 

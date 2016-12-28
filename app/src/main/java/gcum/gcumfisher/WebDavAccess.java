@@ -1,5 +1,6 @@
 package gcum.gcumfisher;
 
+import android.content.Context;
 import android.content.res.Resources;
 import android.support.annotation.NonNull;
 
@@ -59,27 +60,24 @@ import javax.net.ssl.X509TrustManager;
  */
 class WebDavAccess {
 
-    //public static final String WEBSITE = "https://www.debian-economist.eu";
-    //public static final String WEBDAV_ROOT = "/remote.php/webdav/";
-    //public static final String WEBDAV_HOST = "cloud.debian-economist.eu/";
-    private final String WEBDAV_HOST;
-    // public static final String WEBDAV_SITE = "https://cloud.debian-economist.eu";
-    private final String WEBDAV_SITE;
-    //public static final String WEBDAV_ROOT = "/public.php/webdav/";
-    private final String WEBDAV_ROOT;
-    //public static final String WEBDAV_USERNAME = "lUyZLdjvQDIRr8T";
-    private final String WEBDAV_USERNAME;
-    //public static final String WEBDAV_PASSWORD = "Slackpes/42";
-    private final String WEBDAV_PASSWORD;
+    private final String host;
+    private final String site;
+    private final String root;
+    private final String username;
+    private final String password;
 
     private final HttpClient client;
 
-    WebDavAccess(Resources resources) throws CertificateException, UnrecoverableKeyException, NoSuchAlgorithmException, KeyManagementException, KeyStoreException, IOException {
-        WEBDAV_HOST = resources.getString(R.string.webdav_host);
-        WEBDAV_SITE = resources.getString(R.string.webdav_site);
-        WEBDAV_ROOT = resources.getString(R.string.webdav_root);
-        WEBDAV_USERNAME = resources.getString(R.string.webdav_username);
-        WEBDAV_PASSWORD = resources.getString(R.string.webdav_password);
+    WebDavAccess(Context context) throws CertificateException, UnrecoverableKeyException, NoSuchAlgorithmException, KeyManagementException, KeyStoreException, IOException {
+        this(context.getResources(), LoginActivity.getCredentials(context));
+    }
+
+    WebDavAccess(Resources resources, LoginActivity.Credentials credentials) throws CertificateException, UnrecoverableKeyException, NoSuchAlgorithmException, KeyManagementException, KeyStoreException, IOException {
+        host = resources.getString(R.string.webdav_host);
+        site = resources.getString(R.string.webdav_site);
+        root = resources.getString(R.string.webdav_root);
+        username = credentials.username;
+        password = credentials.password;
         client = getHttpClient();
     }
 
@@ -94,7 +92,7 @@ class WebDavAccess {
     }
 
     void putFile(@NonNull String path, @NonNull String fileName, @NonNull String localFile) throws IOException, DavException {
-        PutMethod method = new PutMethod(WEBDAV_SITE + WEBDAV_ROOT + path + fileName);
+        PutMethod method = new PutMethod(site + root + path + fileName);
         method.setRequestHeader("Content-type", "image/jpeg");
         method.setRequestEntity(new InputStreamRequestEntity(new FileInputStream(localFile)));
         int status = client.executeMethod(method);
@@ -102,9 +100,9 @@ class WebDavAccess {
     }
 
     @NonNull
-    private List<String> dir(@NonNull String path) throws IOException, DavException {
-        String root = WEBDAV_ROOT + path;
-        DavMethod method = new PropFindMethod(WEBDAV_SITE + root, DavConstants.PROPFIND_ALL_PROP, DavConstants.DEPTH_1);
+    List<String> dir(@NonNull String path) throws IOException, DavException {
+        String root = this.root + path;
+        DavMethod method = new PropFindMethod(site + root, DavConstants.PROPFIND_ALL_PROP, DavConstants.DEPTH_1);
         client.executeMethod(method);
         method.checkSuccess();
         if (!method.succeeded()) throw new IOException("Cannot dir(" + path + ")");
@@ -121,7 +119,7 @@ class WebDavAccess {
     }
 
     private void mkDir(@NonNull String path, @NonNull String dir) throws IOException, DavException {
-        DavMethod method = new MkColMethod(WEBDAV_SITE + WEBDAV_ROOT + path + dir);
+        DavMethod method = new MkColMethod(site + root + path + dir);
         client.executeMethod(method);
         method.checkSuccess();
         if (!method.succeeded()) throw new IOException("Cannot dir(" + path + ")");
@@ -169,7 +167,7 @@ class WebDavAccess {
     @NonNull
     private HttpClient getHttpClient() throws NoSuchAlgorithmException, KeyManagementException, KeyStoreException, IOException, CertificateException, UnrecoverableKeyException {
         HostConfiguration hostConfig = new HostConfiguration();
-        hostConfig.setHost(WEBDAV_HOST);
+        hostConfig.setHost(host);
 
         KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
         trustStore.load(null, null);
@@ -223,7 +221,7 @@ class WebDavAccess {
 
         HttpClient client = new HttpClient(connectionManager);
         client.setHostConfiguration(hostConfig);
-        Credentials creds = new UsernamePasswordCredentials(WEBDAV_USERNAME, WEBDAV_PASSWORD);
+        Credentials creds = new UsernamePasswordCredentials(username, password);
         client.getState().setCredentials(AuthScope.ANY, creds);
         return client;
     }

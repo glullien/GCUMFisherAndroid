@@ -21,6 +21,7 @@ import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.GridLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -47,6 +48,7 @@ public class WelcomeActivity extends Activity {
     private static final int TAKE_PHOTO_REQUEST = 1;
     private static final int PICK_PHOTO_REQUEST = 2;
     private static final int ADJUST_LOCATION_REQUEST = 3;
+    private static final int LOGIN_REQUEST = 4;
 
     public static final String SAVED_PHOTOS = "gcum.gcumfisher.WelcomeActivity.PHOTOS";
     public static final String SAVED_NEXT_PHOTO = "gcum.gcumfisher.WelcomeActivity.NEXT_PHOTO";
@@ -126,13 +128,22 @@ public class WelcomeActivity extends Activity {
                 return true;
             }
         });
+        updateLoginButton();
+    }
+
+    private void updateLoginButton() {
+        ((Button) findViewById(R.id.login)).setText(getString(isConnected() ? R.string.logout : R.string.login));
+    }
+
+    private boolean isConnected() {
+        return LoginActivity.getCredentials(getApplicationContext()) != null;
     }
 
     /**
      * Enabled send button if we've got a spot and at least one photo
      */
     private void updateSendButton() {
-        findViewById(R.id.send).setEnabled((!photos.isEmpty()) && (!isSendingPhoto()) && (getAddress() != null));
+        findViewById(R.id.send).setEnabled((!photos.isEmpty()) && (!isSendingPhoto()) && (getAddress() != null) && isConnected());
     }
 
     /**
@@ -245,6 +256,9 @@ public class WelcomeActivity extends Activity {
                         ((ImageButton) findViewById(R.id.adjustLocation)).setImageResource(android.R.drawable.ic_menu_mylocation);
                         break;
                 }
+                break;
+            case LOGIN_REQUEST:
+                updateLoginButton();
                 break;
         }
     }
@@ -520,11 +534,23 @@ public class WelcomeActivity extends Activity {
     }
 
     /**
+     * Called when the user click on login button
+     */
+    public void login(View view) {
+        LoginActivity.Credentials credentials = LoginActivity.getCredentials(getApplicationContext());
+        if (credentials != null) {
+            LoginActivity.disconnect(getApplicationContext());
+            updateLoginButton();
+        } else startActivityForResult(new Intent(this, LoginActivity.class), LOGIN_REQUEST);
+    }
+
+    /**
      * Called when the user click on send button
      */
     public void send(View view) {
         Spot address = getAddress();
-        if ((address != null) && !photos.isEmpty()) {
+        LoginActivity.Credentials credentials = LoginActivity.getCredentials(getApplicationContext());
+        if ((address != null) && (credentials != null) && !photos.isEmpty()) {
             sendReportReceiver = new SendReportReceiver(new Handler(), this);
             Intent intent = new Intent(this, SendingReportService.class);
             intent.putExtra(SendingReportService.RECEIVER, sendReportReceiver);
@@ -586,7 +612,6 @@ public class WelcomeActivity extends Activity {
         message.append("Webdav");
         message.append("\nHost:\n").append(getString(R.string.webdav_host));
         message.append("\nSite:\n").append(getString(R.string.webdav_site)).append(getString(R.string.webdav_root));
-        message.append("\nUsername:\n").append(getString(R.string.webdav_username));
         new AlertDialog.Builder(this).setTitle("Info").setMessage(message).setIcon(android.R.drawable.ic_dialog_info).show();
     }
 }

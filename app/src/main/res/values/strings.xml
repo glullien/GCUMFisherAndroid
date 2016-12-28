@@ -29,4 +29,9 @@
         <item quantity="one">%d jour</item>
         <item quantity="other">%d jours</item>
     </plurals>
+    <string name="username">Nom</string>
+    <string name="password">Mot de passe</string>
+    <string name="login">Se connecter</string>
+    <string name="logout">Déconnecter</string>
+    <string name="testing">Test de %s</string>
 </resources>
