@@ -9,7 +9,7 @@
     <string name="send">Envoyer les photos !</string>
     <string name="adjust_location">Modifier</string>
     <string name="gps_calling">Appel du GPS</string>
-    <string name="gps_call_rejected">GPS interdit</string>
+    <string name="gps_call_rejected">Appel au GPS refusée</string>
     <string name="location_provider_disabled">%s est désactivé</string>
     <string name="street_lookup">Recherche de la rue</string>
     <string name="gps_address_not_found">Adresse GPS non trouvé</string>
