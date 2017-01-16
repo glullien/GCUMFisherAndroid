@@ -146,7 +146,7 @@ public class Request extends AsyncTask<String, Spot, Integer> {
     }
 
     private static char toStdLowerChar(char a) {
-        return Chars.toStdChar(Character.toLowerCase(a));
+        return Character.toLowerCase(Chars.toStdChar(a));
     }
 
     private static boolean same(char a, char b) {

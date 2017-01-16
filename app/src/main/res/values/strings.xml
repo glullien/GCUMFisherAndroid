@@ -10,7 +10,7 @@
     <string name="adjust_location">Modifier</string>
     <string name="gps_calling">Appel du GPS</string>
     <string name="gps_call_rejected">Appel au GPS refusée</string>
-    <string name="location_provider_disabled">%s est désactivé</string>
+    <string name="location_provider_disabled">Le position par %s est désactivé</string>
     <string name="street_lookup">Recherche de la rue</string>
     <string name="gps_address_not_found">Adresse GPS non trouvé</string>
     <string name="not_in_paris">Adresse non parisienne : %s</string>
@@ -34,4 +34,7 @@
     <string name="login">Se connecter</string>
     <string name="logout">Déconnecter</string>
     <string name="testing">Test de %s</string>
+    <string name="request_both_location_permissions">La localisation géographique peut proposer la rue où vous êtes automatiquement</string>
+    <string name="request_fine_location_permissions">La localisation fine par satellites peut proposer la rue où vous êtes automatiquement</string>
+    <string name="request_coarse_location_permissions">La localisation par bornes GSM et Wifi peut proposer la rue où vous êtes automatiquement</string>
 </resources>

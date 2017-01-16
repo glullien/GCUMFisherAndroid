@@ -1,9 +1,11 @@
 package gcum.gcumfisher;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
@@ -15,6 +17,7 @@ import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.StringRes;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.FileProvider;
 import android.view.GestureDetector;
 import android.view.Gravity;
@@ -36,6 +39,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
@@ -49,6 +53,8 @@ public class WelcomeActivity extends Activity {
     private static final int PICK_PHOTO_REQUEST = 2;
     private static final int ADJUST_LOCATION_REQUEST = 3;
     private static final int LOGIN_REQUEST = 4;
+
+    private static final int LOCATION_PERMISSION_REQUEST = 10;
 
     public static final String SAVED_PHOTOS = "gcum.gcumfisher.WelcomeActivity.PHOTOS";
     public static final String SAVED_NEXT_PHOTO = "gcum.gcumfisher.WelcomeActivity.NEXT_PHOTO";
@@ -95,6 +101,68 @@ public class WelcomeActivity extends Activity {
         restoreSendReportReceiver();
         updatePhotosCount();
         updateSendButton();
+
+        // Small cheat to view what cloud is being used
+        findViewById(R.id.title).setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                displayInfo();
+                return true;
+            }
+        });
+        updateLoginButton();
+
+        // Check and request location permission
+        boolean fineLocationRefused = ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED;
+        boolean coarseLocationRefused = ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED;
+        if (fineLocationRefused && coarseLocationRefused) {
+            boolean shouldRequestFineLocation = ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION);
+            boolean shouldRequestCoarseLocation = ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_COARSE_LOCATION);
+
+            if (shouldRequestFineLocation && shouldRequestCoarseLocation)
+                displayLocationPermissionInfo(R.string.request_both_location_permissions);
+            else if (shouldRequestFineLocation)
+                displayLocationPermissionInfo(R.string.request_fine_location_permissions);
+            else if (shouldRequestCoarseLocation)
+                displayLocationPermissionInfo(R.string.request_coarse_location_permissions);
+            else requestLocationPermissions();
+        } else startLocationSolver();
+    }
+
+    private void displayLocationPermissionInfo(int messageId) {
+        new AlertDialog.Builder(this).setTitle(R.string.error).setMessage(messageId).setIcon(android.R.drawable.ic_dialog_alert).
+                setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        requestLocationPermissions();
+                    }
+                }).
+                setNegativeButton(android.R.string.no, null).
+                show();
+    }
+
+    private void requestLocationPermissions() {
+        List<String> missingPermissions = new ArrayList<>(2);
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+            missingPermissions.add(Manifest.permission.ACCESS_FINE_LOCATION);
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+            missingPermissions.add(Manifest.permission.ACCESS_COARSE_LOCATION);
+        if (!missingPermissions.isEmpty()) {
+            ActivityCompat.requestPermissions(this, missingPermissions.toArray(new String[missingPermissions.size()]), LOCATION_PERMISSION_REQUEST);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case LOCATION_PERMISSION_REQUEST:
+                if ((grantResults.length > 0) && (grantResults[0] == PackageManager.PERMISSION_GRANTED))
+                    startLocationSolver();
+                break;
+        }
+    }
+
+    private void startLocationSolver() {
         LocationSolver.startTracking(this, new LocationSolver.Listener() {
             @Override
             public void displayError(@NonNull CharSequence message) {
@@ -115,20 +183,10 @@ public class WelcomeActivity extends Activity {
              */
             @Override
             public void setLocationResults(@NonNull List<Spot> addresses) {
-                gpsAddress = addresses.get(0);
+                gpsAddress = addresses.isEmpty()?null:addresses.get(0);
                 updateLocation();
             }
         }, 1);
-
-        // Small cheat to view what cloud is being used
-        findViewById(R.id.title).setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View v) {
-                displayInfo();
-                return true;
-            }
-        });
-        updateLoginButton();
     }
 
     private void updateLoginButton() {

@@ -15,6 +15,7 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
@@ -111,6 +112,7 @@ class LocationSolver {
 
         @Override
         public void onProviderDisabled(String provider) {
+            listener.setLocationResults(Collections.<Spot>emptyList());
             listener.displayError(activity.getString(R.string.location_provider_disabled, provider));
         }
     };
