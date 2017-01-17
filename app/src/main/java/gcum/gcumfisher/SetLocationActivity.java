@@ -12,6 +12,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,6 +43,13 @@ public class SetLocationActivity extends Activity {
             super(context.getResources(), 10);
         }
 
+        @Override
+        protected void onPreExecute() {
+            ProgressBar wheel = (ProgressBar) findViewById(R.id.search_street_progress);
+            wheel.setVisibility(View.VISIBLE);
+            wheel.setIndeterminate(true);
+        }
+
         /**
          * Appelé quand une adresse possible est trouvée
          */
@@ -51,6 +59,10 @@ public class SetLocationActivity extends Activity {
                 for (Spot spot : spots) if (spot != null) addSpot(spot);
         }
 
+        @Override
+        protected void onPostExecute(Integer integer) {
+            findViewById(R.id.search_street_progress).setVisibility(View.GONE);
+        }
     }
 
     /**
@@ -89,6 +101,8 @@ public class SetLocationActivity extends Activity {
                 if (spot != null) finish(spot);
             }
         });
+
+        findViewById(R.id.search_street_progress).setVisibility(View.GONE);
     }
 
     private QueryAddress currentLookup;

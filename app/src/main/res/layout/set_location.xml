@@ -18,11 +18,11 @@
         android:orientation="horizontal">
 
         <ImageButton
+            style="?android:attr/borderlessButtonStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            style="?android:attr/borderlessButtonStyle"
-            android:onClick="cancel"
             android:contentDescription="@android:string/cancel"
+            android:onClick="cancel"
             android:src="@android:drawable/ic_menu_close_clear_cancel" />
 
         <LinearLayout
@@ -59,10 +59,22 @@
         android:layout_marginRight="25dp"
         android:layout_marginStart="25dp" />
 
-    <ListView
-        android:id="@+id/streets"
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_above="@id/status"
-        android:layout_below="@id/controls" />
+        android:layout_below="@id/controls">
+
+        <ListView
+            android:id="@+id/streets"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <ProgressBar
+            android:id="@+id/search_street_progress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true" />
+
+    </RelativeLayout>
 </RelativeLayout>
