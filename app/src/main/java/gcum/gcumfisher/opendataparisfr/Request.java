@@ -72,14 +72,14 @@ public class Request extends AsyncTask<String, Spot, Integer> {
     private List<Spot> getSpots(@NonNull String extract) throws IOException {
         final List<Spot> res = new ArrayList<>(maxNumber);
         final List<Spot> streets = getStreets(resources);
-        final String stdExtract = toStdLowerChar(extract);
+        final String[] stdExtract = toStdLowerChar(extract).split("[ -,']");
 
         final int maxRslSize = maxNumber - res.size();
         List<ResultSpotLevenshtein> rsl = new ArrayList<>(maxRslSize);
         for (int i = 0; i < streets.size() && ((rsl.size() < maxNumber) || (rsl.get(rsl.size() - 1).levenshtein > 0)) && !isCancelled(); i++) {
             final Spot spot = streets.get(i);
             if (!res.contains(spot)) {
-                final int lenvenshtein = levenshteinIn(stdExtract, toStdLowerChar(spot.street));
+                final int lenvenshtein = levenshteinWordsIn(stdExtract, toStdLowerChar(spot.street));
                 if ((rsl.size() < maxRslSize) || rsl.get(rsl.size() - 1).levenshtein > lenvenshtein) {
                     rsl.add(new ResultSpotLevenshtein(spot, lenvenshtein));
                     Collections.sort(rsl);
@@ -105,6 +105,12 @@ public class Request extends AsyncTask<String, Spot, Integer> {
         public int compareTo(@NonNull ResultSpotLevenshtein o) {
             return (levenshtein < o.levenshtein) ? -1 : (levenshtein == o.levenshtein) ? 0 : 1;
         }
+    }
+
+    private static int levenshteinWordsIn(@NonNull CharSequence[] extract, @NonNull CharSequence text) {
+        int res = 0;
+        for (CharSequence word : extract) res += levenshteinIn(word, text);
+        return res;
     }
 
     private static int levenshteinIn(@NonNull CharSequence extract, @NonNull CharSequence text) {
