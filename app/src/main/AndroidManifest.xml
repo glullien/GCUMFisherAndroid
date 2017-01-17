@@ -46,6 +46,7 @@
         </activity>
         <activity android:name=".SetLocationActivity" />
         <activity android:name=".LoginActivity" />
+        <activity android:name=".PreferencesActivity" />
     </application>
 
 </manifest>

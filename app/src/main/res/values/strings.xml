@@ -37,4 +37,11 @@
     <string name="request_both_location_permissions">La localisation géographique peut proposer la rue où vous êtes automatiquement</string>
     <string name="request_fine_location_permissions">La localisation fine par satellites peut proposer la rue où vous êtes automatiquement</string>
     <string name="request_coarse_location_permissions">La localisation par bornes GSM et Wifi peut proposer la rue où vous êtes automatiquement</string>
+    <string name="preferences">Préférences</string>
+    <string name="images_size">Taille des images</string>
+    <string name="images_size_small">Petites</string>
+    <string name="images_size_medium">Moyennes</string>
+    <string name="images_size_maximum">Maximales</string>
+    <string name="images_quality">Qualité des images</string>
+    <string name="images_quality_result">%d%%</string>
 </resources>
