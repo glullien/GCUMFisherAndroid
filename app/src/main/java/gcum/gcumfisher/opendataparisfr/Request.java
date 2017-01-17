@@ -72,13 +72,14 @@ public class Request extends AsyncTask<String, Spot, Integer> {
     private List<Spot> getSpots(@NonNull String extract) throws IOException {
         final List<Spot> res = new ArrayList<>(maxNumber);
         final List<Spot> streets = getStreets(resources);
+        final String stdExtract = toStdLowerChar(extract);
 
         final int maxRslSize = maxNumber - res.size();
         List<ResultSpotLevenshtein> rsl = new ArrayList<>(maxRslSize);
         for (int i = 0; i < streets.size() && ((rsl.size() < maxNumber) || (rsl.get(rsl.size() - 1).levenshtein > 0)) && !isCancelled(); i++) {
             final Spot spot = streets.get(i);
             if (!res.contains(spot)) {
-                final int lenvenshtein = levenshteinIn(extract, spot.street);
+                final int lenvenshtein = levenshteinIn(stdExtract, toStdLowerChar(spot.street));
                 if ((rsl.size() < maxRslSize) || rsl.get(rsl.size() - 1).levenshtein > lenvenshtein) {
                     rsl.add(new ResultSpotLevenshtein(spot, lenvenshtein));
                     Collections.sort(rsl);
@@ -128,7 +129,7 @@ public class Request extends AsyncTask<String, Spot, Integer> {
             newCost[0] = i;
 
             for (int j = 1; j <= lhsLength; j++) {
-                int match = (same(lhs.charAt(j - 1), rhs.charAt(rhsStart + i - 1))) ? 0 : 1;
+                int match = (lhs.charAt(j - 1) == rhs.charAt(rhsStart + i - 1)) ? 0 : 1;
 
                 int costReplace = cost[j - 1] + match;
                 int costInsert = cost[j] + 1;
@@ -145,12 +146,15 @@ public class Request extends AsyncTask<String, Spot, Integer> {
         return cost[lhsLength];
     }
 
-    private static char toStdLowerChar(char a) {
-        return Character.toLowerCase(Chars.toStdChar(a));
+    @NonNull
+    private static String toStdLowerChar(@NonNull String s) {
+        final char[] res = new char[s.length()];
+        for (int i = 0; i < res.length; i++) res[i] = toStdLowerChar(s.charAt(i));
+        return new String(res);
     }
 
-    private static boolean same(char a, char b) {
-        return toStdLowerChar(a) == toStdLowerChar(b);
+    private static char toStdLowerChar(char a) {
+        return Character.toLowerCase(Chars.toStdChar(a));
     }
 
 }
