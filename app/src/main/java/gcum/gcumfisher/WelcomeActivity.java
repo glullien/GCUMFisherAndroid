@@ -21,6 +21,9 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.FileProvider;
 import android.view.GestureDetector;
 import android.view.Gravity;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -53,6 +56,7 @@ public class WelcomeActivity extends Activity {
     private static final int PICK_PHOTO_REQUEST = 2;
     private static final int ADJUST_LOCATION_REQUEST = 3;
     private static final int LOGIN_REQUEST = 4;
+    private static final int PREFERENCES_REQUEST = 5;
 
     private static final int LOCATION_PERMISSION_REQUEST = 10;
 
@@ -129,6 +133,24 @@ public class WelcomeActivity extends Activity {
         } else startLocationSolver();
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.welcome, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.preferences:
+                startActivityForResult(new Intent(this, PreferencesActivity.class), PREFERENCES_REQUEST);
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
     private void displayLocationPermissionInfo(int messageId) {
         new AlertDialog.Builder(this).setTitle(R.string.error).setMessage(messageId).setIcon(android.R.drawable.ic_dialog_alert).
                 setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
@@ -183,7 +205,7 @@ public class WelcomeActivity extends Activity {
              */
             @Override
             public void setLocationResults(@NonNull List<Spot> addresses) {
-                gpsAddress = addresses.isEmpty()?null:addresses.get(0);
+                gpsAddress = addresses.isEmpty() ? null : addresses.get(0);
                 updateLocation();
             }
         }, 1);
@@ -614,6 +636,8 @@ public class WelcomeActivity extends Activity {
             intent.putExtra(SendingReportService.RECEIVER, sendReportReceiver);
             intent.putExtra(SendingReportService.STREET, address.street);
             intent.putExtra(SendingReportService.DISTRICT, address.district);
+            intent.putExtra(SendingReportService.IMAGE_SIZE, PreferencesActivity.getImageSize(getApplicationContext()).name());
+            intent.putExtra(SendingReportService.IMAGE_QUALITY, 95);
             intent.putStringArrayListExtra(SendingReportService.IMAGES, Photo.toArrayList(photos));
             startService(intent);
             updateSendButton();

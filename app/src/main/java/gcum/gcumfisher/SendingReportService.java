@@ -30,6 +30,8 @@ public class SendingReportService extends IntentService {
     public static final String RECEIVER = "gcum.gcumfisher.SendingReportService.RECEIVER";
     public static final String STREET = "gcum.gcumfisher.SendingReportService.STREET";
     public static final String DISTRICT = "gcum.gcumfisher.SendingReportService.DISTRICT";
+    public static final String IMAGE_SIZE = "gcum.gcumfisher.SendingReportService.IMAGE_SIZE";
+    public static final String IMAGE_QUALITY = "gcum.gcumfisher.SendingReportService.IMAGE_QUALITY";
     public static final String IMAGES = "gcum.gcumfisher.SendingReportService.IMAGES";
     public static final String PROGRESS_MESSAGE = "gcum.gcumfisher.SendingReportService.PROGRESS_MESSAGE";
     public static final String ERROR_MESSAGE = "gcum.gcumfisher.SendingReportService.ERROR_MESSAGE";
@@ -90,15 +92,17 @@ public class SendingReportService extends IntentService {
         if (intent == null) return;
         final ResultReceiver receiver = intent.getParcelableExtra(RECEIVER);
         try {
-            WebDavAccess webDavAccess = new WebDavAccess(getApplicationContext());
+            final WebDavAccess webDavAccess = new WebDavAccess(getApplicationContext());
 
-            String street = encodeStreet(intent.getStringExtra(STREET));
-            String district = encodeDistrict(intent.getIntExtra(DISTRICT, 0));
-            List<Photo> images = Photo.fromArrayList(intent.getStringArrayListExtra(IMAGES));
-            String dir = getString(R.string.webdav_dir);
+            final String street = encodeStreet(intent.getStringExtra(STREET));
+            final String district = encodeDistrict(intent.getIntExtra(DISTRICT, 0));
+            final List<Photo> images = Photo.fromArrayList(intent.getStringArrayListExtra(IMAGES));
+            final String dir = getString(R.string.webdav_dir);
+            final PreferencesActivity.ImageSize imageSize = PreferencesActivity.ImageSize.valueOf(intent.getStringExtra(IMAGE_SIZE));
+            final int quality = intent.getIntExtra(IMAGE_QUALITY, 95);
 
             makeDirs(receiver, webDavAccess, dir, street, district, getEncodedDates(images));
-            transferFiles(receiver, webDavAccess, images, dir + district + street);
+            transferFiles(receiver, webDavAccess, imageSize, quality, images, dir + district + street);
 
             deliverSuccess(receiver);
         } catch (Exception e) {
@@ -121,11 +125,15 @@ public class SendingReportService extends IntentService {
         return dates;
     }
 
-    private void transferFiles(@NonNull ResultReceiver receiver, @NonNull WebDavAccess webDavAccess, @NonNull List<Photo> images, @NonNull String dir) throws IOException, DavException {
+    private void transferFiles(
+            @NonNull ResultReceiver receiver, @NonNull WebDavAccess webDavAccess,
+                               @NonNull PreferencesActivity.ImageSize imageSize, int quality,
+            @NonNull List<Photo> images, @NonNull String dir) throws IOException, DavException {
         for (int i = 0; i < images.size(); i++) {
             final Photo photo = images.get(i);
             deliverProgress(receiver, getString(R.string.sending_images, i + 1, images.size()));
-            webDavAccess.putFile(dir + encodeDate(photo.date), encodeFileName(photo.path), photo.path);
+            final byte[] resizedPhoto = imageSize.resize(photo, quality, getApplicationContext());
+            webDavAccess.putFile(dir + encodeDate(photo.date), encodeFileName(photo.path), resizedPhoto);
         }
     }
 

@@ -36,8 +36,9 @@ import org.apache.jackrabbit.webdav.client.methods.MkColMethod;
 import org.apache.jackrabbit.webdav.client.methods.PropFindMethod;
 import org.apache.jackrabbit.webdav.client.methods.PutMethod;
 
-import java.io.FileInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
@@ -91,10 +92,18 @@ class WebDavAccess {
         else if (dirs.size() > 1) ensureExists(path + dirs.get(0), dirs.subList(1, dirs.size()));
     }
 
-    void putFile(@NonNull String path, @NonNull String fileName, @NonNull String localFile) throws IOException, DavException {
+    /*void putFile(@NonNull String path, @NonNull String fileName, @NonNull String localFile) throws IOException, DavException {
+        putFile(path, fileName, new FileInputStream(localFile));
+    }*/
+
+    void putFile(@NonNull String path, @NonNull String fileName, @NonNull byte[] data) throws IOException, DavException {
+        putFile(path, fileName, new ByteArrayInputStream(data));
+    }
+
+    private void putFile(@NonNull String path, @NonNull String fileName, @NonNull InputStream content) throws IOException, DavException {
         PutMethod method = new PutMethod(site + root + path + fileName);
         method.setRequestHeader("Content-type", "image/jpeg");
-        method.setRequestEntity(new InputStreamRequestEntity(new FileInputStream(localFile)));
+        method.setRequestEntity(new InputStreamRequestEntity(content));
         int status = client.executeMethod(method);
         if (status != HttpStatus.SC_CREATED) throw new IOException("Http not ok: " + status);
     }

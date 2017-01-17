@@ -78,7 +78,8 @@ class Photo {
         final Bitmap resized;
         final int width = fullSize.getWidth();
         final int height = fullSize.getHeight();
-        if (width <= height)
+        if ((width <= maxSize) && (height <= maxSize)) resized = fullSize;
+        else if (width <= height)
             resized = Bitmap.createScaledBitmap(fullSize, width * maxSize / height, maxSize, true);
         else resized = Bitmap.createScaledBitmap(fullSize, maxSize, height * maxSize / width, true);
         return resized;
