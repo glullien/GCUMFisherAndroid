@@ -216,7 +216,7 @@ public class WelcomeActivity extends Activity {
     }
 
     private boolean isConnected() {
-        return LoginActivity.getCredentials(getApplicationContext()) != null;
+        return LoginActivity.getAutoLogin(getApplicationContext()) != null;
     }
 
     /**
@@ -617,8 +617,7 @@ public class WelcomeActivity extends Activity {
      * Called when the user click on login button
      */
     public void login(View view) {
-        LoginActivity.Credentials credentials = LoginActivity.getCredentials(getApplicationContext());
-        if (credentials != null) {
+        if (isConnected()) {
             LoginActivity.disconnect(getApplicationContext());
             updateLoginButton();
         } else startActivityForResult(new Intent(this, LoginActivity.class), LOGIN_REQUEST);
@@ -629,8 +628,7 @@ public class WelcomeActivity extends Activity {
      */
     public void send(View view) {
         Spot address = getAddress();
-        LoginActivity.Credentials credentials = LoginActivity.getCredentials(getApplicationContext());
-        if ((address != null) && (credentials != null) && !photos.isEmpty()) {
+        if ((address != null) && isConnected() && !photos.isEmpty()) {
             sendReportReceiver = new SendReportReceiver(new Handler(), this);
             Intent intent = new Intent(this, SendingReportService.class);
             intent.putExtra(SendingReportService.RECEIVER, sendReportReceiver);

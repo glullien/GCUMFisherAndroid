@@ -12,14 +12,14 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.TimeZone;
 
-class Photo {
+public class Photo {
     @NonNull
-    final String path;
+    public final String path;
 
     /**
      * Epoch time stamp
      */
-    final long date;
+    public final long date;
 
     Photo(@NonNull String path, long date) {
         this.path = path;

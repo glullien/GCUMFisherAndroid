@@ -33,6 +33,8 @@
     <string name="password">Mot de passe</string>
     <string name="login">Se connecter</string>
     <string name="logout">Déconnecter</string>
+    <string name="invalid_username">Le pseudo doit être constitué de 1 à 20 caractères alphanumériques ou de _</string>
+    <string name="invalid_password">Le mot de passe doit être constitué de 6 à 20 caractères</string>
     <string name="testing">Test de %s</string>
     <string name="request_both_location_permissions">La localisation géographique peut proposer la rue où vous êtes automatiquement</string>
     <string name="request_fine_location_permissions">La localisation fine par satellites peut proposer la rue où vous êtes automatiquement</string>

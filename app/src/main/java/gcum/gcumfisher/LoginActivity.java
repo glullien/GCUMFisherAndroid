@@ -1,6 +1,5 @@
 package gcum.gcumfisher;
 
-
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -12,17 +11,28 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import java.util.List;
+import gcum.gcumfisher.connection.AutoLogin;
+import gcum.gcumfisher.connection.GetLogin;
 
 public class LoginActivity extends Activity {
 
     public static final int LOGIN = 1;
     public static final int CANCELED = 2;
     private static final String PREFERENCES = "gcum.gcumfisher.LOGIN_PREFERENCES";
-    public static final String KEY_USERNAME = "username";
-    public static final String KEY_PASSWORD = "password";
+    public static final String KEY_CODE = "autoLoginCode";
+    public static final String KEY_VALID_TO = "autoLoginValidTo";
 
-    class Testing extends AsyncTask<String, Boolean, Boolean> {
+    static class TestingResult {
+        private final AutoLogin autoLogin;
+        private final String error;
+
+        TestingResult(AutoLogin autoLogin, String error) {
+            this.autoLogin = autoLogin;
+            this.error = error;
+        }
+    }
+
+    class Testing extends AsyncTask<String, Boolean, TestingResult> {
         private final Credentials credentials;
 
         Testing(Credentials credentials) {
@@ -30,35 +40,33 @@ public class LoginActivity extends Activity {
         }
 
         @Override
-        protected void onPostExecute(Boolean res) {
-            if (res) {
+        protected void onPostExecute(TestingResult res) {
+            if (res.autoLogin != null) {
                 SharedPreferences sharedPref = getApplicationContext().getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE);
                 SharedPreferences.Editor editor = sharedPref.edit();
-                editor.putString(KEY_USERNAME, credentials.username);
-                editor.putString(KEY_PASSWORD, credentials.password);
+                editor.putString(KEY_CODE, res.autoLogin.getCode());
+                editor.putString(KEY_VALID_TO, res.autoLogin.getValidTo());
                 editor.commit();
                 setResult(LOGIN);
                 finish();
             } else {
-                setStatus(getString(R.string.error), R.color.error);
+                setStatus(res.error, R.color.error);
                 findViewById(R.id.login).setEnabled(true);
             }
         }
 
         @Override
-        protected Boolean doInBackground(String... params) {
+        protected TestingResult doInBackground(String... params) {
             try {
-                WebDavAccess access = new WebDavAccess(getResources(), credentials);
-                List<String> files = access.dir(getString(R.string.webdav_dir));
-                return !files.isEmpty();
+                return new TestingResult(GetLogin.getAutoLogin(credentials.username, credentials.password), null);
             } catch (Exception e) {
                 e.printStackTrace();
-                return false;
+                return new TestingResult(null, e.getMessage());
             }
         }
     }
 
-    static class Credentials {
+    private static class Credentials {
         final String username;
         final String password;
 
@@ -71,17 +79,17 @@ public class LoginActivity extends Activity {
     static void disconnect(@NonNull Context context) {
         SharedPreferences sharedPref = context.getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
-        editor.remove(KEY_USERNAME);
-        editor.remove(KEY_PASSWORD);
+        editor.remove(KEY_CODE);
+        editor.remove(KEY_VALID_TO);
         editor.commit();
     }
 
     @Nullable
-    static Credentials getCredentials(@NonNull Context context) {
+    static AutoLogin getAutoLogin(@NonNull Context context) {
         SharedPreferences sharedPref = context.getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE);
-        String username = sharedPref.getString(KEY_USERNAME, null);
-        String password = sharedPref.getString(KEY_PASSWORD, null);
-        return ((username == null) ||(password==null))?null:new Credentials(username, password);
+        String code = sharedPref.getString(KEY_CODE, null);
+        String validTo = sharedPref.getString(KEY_VALID_TO, null);
+        return ((code == null) || (validTo == null)) ? null : new AutoLogin(code, validTo);
     }
 
     @Override
@@ -91,11 +99,17 @@ public class LoginActivity extends Activity {
     }
 
     public void login(View view) {
-        String username = ((EditText) findViewById(R.id.usernameInput)).getText().toString();
-        String password = ((EditText) findViewById(R.id.passwordInput)).getText().toString();
-        setStatus(getString(R.string.testing, username), R.color.progress);
-        findViewById(R.id.login).setEnabled(false);
-        new Testing(new Credentials(username, password)).execute();
+        final String username = ((EditText) findViewById(R.id.usernameInput)).getText().toString();
+        final String password = ((EditText) findViewById(R.id.passwordInput)).getText().toString();
+        if (!username.matches("[a-zA-Z\\d_]{1,20}"))
+            setStatus(getString(R.string.invalid_username), R.color.error);
+        else if (!password.matches(".{6,20}"))
+            setStatus(getString(R.string.invalid_password), R.color.error);
+        else {
+            setStatus(getString(R.string.testing, username), R.color.progress);
+            findViewById(R.id.login).setEnabled(false);
+            new Testing(new Credentials(username, password)).execute();
+        }
     }
 
     void setStatus(String status, int color) {

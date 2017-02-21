@@ -7,20 +7,10 @@ import android.os.ResultReceiver;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import org.apache.jackrabbit.webdav.DavException;
-
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.TimeZone;
+
+import gcum.gcumfisher.connection.AutoLogin;
+import gcum.gcumfisher.connection.GetLogin;
 
 /**
  * Background service pour l'envoi des fichiers vers le cloud
@@ -43,97 +33,24 @@ public class SendingReportService extends IntentService {
         super("SendingReportService");
     }
 
-    private final static Map<String, String> streetsDirs = new HashMap<>();
-
-    static {
-        // Petit trick pour conserver les noms actuels dans le cloud
-        streetsDirs.put("quai de jemmapes", "quai_Jemmapes/");
-    }
-
-    @NonNull
-    private static String replaceSpecialChars(@NonNull String source) {
-        // Apparemment le Webdav n'aime pas les accents français
-        // todo trouver la liste exhaustive des caractères autorisés
-        return Chars.toStdChars(source.replaceAll(" ", "_").replaceAll("/", " _"));
-    }
-
-    @NonNull
-    private static String firstCharToLowerCase(@NonNull String source) {
-        return source.substring(0, 1).toLowerCase() + source.substring(1);
-    }
-
-    @NonNull
-    private static String encodeStreet(@NonNull String street) {
-        String res = streetsDirs.get(street.toLowerCase());
-        if (res == null) res = firstCharToLowerCase(replaceSpecialChars(street)) + "/";
-        return res;
-    }
-
-    @NonNull
-    private static String encodeDistrict(int district) {
-        return (district == 1) ? "1er/" : (Integer.toString(district) + "e/");
-    }
-
-    @NonNull
-    private static String encodeDate(long date) {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy_MM_dd", Locale.FRANCE);
-        dateFormat.setTimeZone(TimeZone.getTimeZone("Europe/Paris"));
-        return dateFormat.format(new Date(date)) + "/";
-    }
-
-    @NonNull
-    private static String encodeFileName(@NonNull String image) {
-        int lastSlash = image.lastIndexOf('/');
-        return image.substring(lastSlash + 1);
-    }
-
     @Override
     protected void onHandleIntent(@Nullable Intent intent) {
         if (intent == null) return;
         final ResultReceiver receiver = intent.getParcelableExtra(RECEIVER);
         try {
-            final WebDavAccess webDavAccess = new WebDavAccess(getApplicationContext());
-
-            final String street = encodeStreet(intent.getStringExtra(STREET));
-            final String district = encodeDistrict(intent.getIntExtra(DISTRICT, 0));
-            final List<Photo> images = Photo.fromArrayList(intent.getStringArrayListExtra(IMAGES));
-            final String dir = getString(R.string.webdav_dir);
-            final PreferencesActivity.ImageSize imageSize = PreferencesActivity.ImageSize.valueOf(intent.getStringExtra(IMAGE_SIZE));
-            final int quality = intent.getIntExtra(IMAGE_QUALITY, 95);
-
-            makeDirs(receiver, webDavAccess, dir, street, district, getEncodedDates(images));
-            transferFiles(receiver, webDavAccess, imageSize, quality, images, dir + district + street);
+            final AutoLogin autoLogin = LoginActivity.getAutoLogin(getApplicationContext());
+            final String street = intent.getStringExtra(STREET);
+            final int district = intent.getIntExtra(DISTRICT, 0);
+            final List<Photo> photos = Photo.fromArrayList(intent.getStringArrayListExtra(IMAGES));
+            for (int i = 0; i < photos.size(); i++) {
+                deliverProgress(receiver, getString(R.string.sending_images, i + 1, photos.size()));
+                GetLogin.uploadAndReport(autoLogin, street, district, photos.get(i));
+            }
 
             deliverSuccess(receiver);
         } catch (Exception e) {
             e.printStackTrace();
             deliverError(receiver, "Err: " + e);
-        }
-    }
-
-    private void makeDirs(@NonNull ResultReceiver receiver, @NonNull WebDavAccess webDavAccess, @NonNull String dir, @NonNull String street, @NonNull String district, @NonNull Set<String> dates) throws IOException, DavException {
-        deliverProgress(receiver, getString(R.string.creating_directories));
-        webDavAccess.ensureExists(dir, Arrays.asList(district, street));
-        for (String date : dates)
-            webDavAccess.ensureExists(dir + district + street, Collections.singletonList(date));
-    }
-
-    @NonNull
-    private Set<String> getEncodedDates(@NonNull List<Photo> images) {
-        final Set<String> dates = new HashSet<>();
-        for (Photo photo : images) dates.add(encodeDate(photo.date));
-        return dates;
-    }
-
-    private void transferFiles(
-            @NonNull ResultReceiver receiver, @NonNull WebDavAccess webDavAccess,
-                               @NonNull PreferencesActivity.ImageSize imageSize, int quality,
-            @NonNull List<Photo> images, @NonNull String dir) throws IOException, DavException {
-        for (int i = 0; i < images.size(); i++) {
-            final Photo photo = images.get(i);
-            deliverProgress(receiver, getString(R.string.sending_images, i + 1, images.size()));
-            final byte[] resizedPhoto = imageSize.resize(photo, quality, getApplicationContext());
-            webDavAccess.putFile(dir + encodeDate(photo.date), encodeFileName(photo.path), resizedPhoto);
         }
     }
 

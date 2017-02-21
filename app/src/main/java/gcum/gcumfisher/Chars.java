@@ -25,6 +25,8 @@ public class Chars {
             case 'û':
             case 'ü':
                 return 'u';
+            case 'ÿ':
+                return 'y';
             case 'ç':
                 return 'c';
             case 'œ':
@@ -48,6 +50,8 @@ public class Chars {
             case 'Û':
             case 'Ü':
                 return 'U';
+            case 'Ÿ':
+                return 'Y';
             case 'Ç':
                 return 'C';
             case 'Œ':
