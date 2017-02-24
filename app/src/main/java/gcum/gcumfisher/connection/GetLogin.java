@@ -6,6 +6,7 @@ import com.android.internal.http.multipart.MultipartEntity;
 import com.android.internal.http.multipart.Part;
 import com.android.internal.http.multipart.StringPart;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -21,6 +22,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -33,7 +35,7 @@ import gcum.gcumfisher.Photo;
 
 public class GetLogin {
 
-    private static final String baseURL = "http://192.168.1.13:8080/";
+    private static final String baseURL = "http://www.gcum.lol/";
 
     private static String readStream(InputStream in) {
         BufferedReader reader = null;
@@ -63,6 +65,10 @@ public class GetLogin {
     }
 
     private static JSONObject queryJson(String servlet, Map<String, String> params, Part part) throws IOException, JSONException {
+        return new JSONObject(readStream(query(servlet, params, part)));
+    }
+
+    private static InputStream query(String servlet, Map<String, String> params, Part part) throws IOException, JSONException {
         URL url = new URL(baseURL + servlet);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setReadTimeout(10000);
@@ -104,8 +110,7 @@ public class GetLogin {
         }
 
         final int code = conn.getResponseCode();
-        if (code == HttpURLConnection.HTTP_OK)
-            return new JSONObject(readStream(conn.getInputStream()));
+        if (code == HttpURLConnection.HTTP_OK) return conn.getInputStream();
 
         throw new IOException("Http error " + code);
     }
@@ -135,4 +140,57 @@ public class GetLogin {
             throw new Exception(res.getString("message"));
     }
 
+    public static List<Point> getPoints() throws Exception {
+        final Map<String, String> params = new HashMap<>();
+        params.put("zone", "All");
+        params.put("timeFrame", "All");
+        params.put("locationSources", "Street,Device");
+        params.put("authors", "-All-");
+        final JSONObject res = queryJson("getPoints", params);
+        if (!res.getString("result").equals("success"))
+            throw new Exception(res.getString("message"));
+        final JSONArray photos = res.getJSONArray("photos");
+        final List<Point> list = new ArrayList<>(photos.length());
+        for (int i = 0; i < photos.length(); i++) {
+            JSONObject o = photos.getJSONObject(i);
+            list.add(new Point(o.getLong("latitude"), o.getLong("longitude")));
+        }
+        return list;
+    }
+
+    public static List<ServerPhoto> getPointInfo(Point point) throws Exception {
+        final Map<String, String> params = new HashMap<>();
+        params.put("latitude", Long.toString(point.getLatitude()));
+        params.put("longitude", Long.toString(point.getLongitude()));
+        params.put("timeFrame", "All");
+        params.put("locationSources", "Street,Device");
+        params.put("authors", "-All-");
+        final JSONObject res = queryJson("getPointInfo", params);
+        if (!res.getString("result").equals("success"))
+            throw new Exception(res.getString("message"));
+        final JSONArray photos = res.getJSONArray("photos");
+        final List<ServerPhoto> list = new ArrayList<>(photos.length());
+        for (int i = 0; i < photos.length(); i++) {
+            JSONObject o = photos.getJSONObject(i);
+            list.add(new ServerPhoto(
+                    o.getString("id"),
+                    o.getString("date"),
+                    o.getString("time"),
+                    ServerPhoto.CoordinatesSource.valueOf(o.getString("locationSource")),
+                    new Point(o.getLong("latitude"), o.getLong("longitude")),
+                    o.optString("username", null),
+                    o.getInt("likesCount"),
+                    o.getBoolean("isLiked")));
+
+        }
+        return list;
+    }
+
+    public static InputStream getPhotoInputStream(String id, int maxSize) throws Exception {
+        URL url = new URL(baseURL + "getPhoto?id=" + id + "&maxSize=" + maxSize);
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setDoInput(true);
+        conn.connect();
+        return conn.getInputStream();
+    }
 }

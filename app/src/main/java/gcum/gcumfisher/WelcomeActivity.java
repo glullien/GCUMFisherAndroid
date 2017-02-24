@@ -146,6 +146,9 @@ public class WelcomeActivity extends Activity {
             case R.id.preferences:
                 startActivityForResult(new Intent(this, PreferencesActivity.class), PREFERENCES_REQUEST);
                 return true;
+            case R.id.map:
+                startActivityForResult(new Intent(this, MapActivity.class), PREFERENCES_REQUEST);
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }

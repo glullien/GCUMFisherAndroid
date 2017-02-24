@@ -46,4 +46,5 @@
     <string name="images_size_maximum">Maximales</string>
     <string name="images_quality">Qualité des images</string>
     <string name="images_quality_result">%d%%</string>
+    <string name="map">Carte</string>
 </resources>
