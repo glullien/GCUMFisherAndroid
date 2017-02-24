@@ -5,12 +5,15 @@ import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.media.ExifInterface;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.TimeZone;
+
+import gcum.gcumfisher.connection.Point;
 
 public class Photo {
     @NonNull
@@ -21,15 +24,22 @@ public class Photo {
      */
     public final long date;
 
-    Photo(@NonNull String path, long date) {
+    @Nullable
+    public final Point point;
+
+    Photo(@NonNull String path, long date, @Nullable Point point) {
         this.path = path;
         this.date = date;
+        this.point = point;
     }
 
-    Photo(@NonNull String datePath) {
-        int slash = datePath.indexOf('/');
-        this.path = datePath.substring(slash + 1);
-        this.date = Long.parseLong(datePath.substring(0, slash));
+    Photo(@NonNull String savedString) {
+        int slash = savedString.indexOf('/');
+        this.path = savedString.substring(slash + 1);
+        String [] pars = savedString.substring(0, slash).split("&");
+        this.date = Long.parseLong(pars[0]);
+        if (pars.length == 1) point = null;
+        else point = new Point(Long.parseLong(pars[1]), Long.parseLong(pars[2]));
     }
 
 
@@ -113,6 +123,10 @@ public class Photo {
     @Override
     @NonNull
     public String toString() {
-        return Long.toString(date) + "/" + path;
+        final StringBuilder res = new StringBuilder();
+        res.append(Long.toString(date));
+        if (point != null) res.append("&").append(point.getLatitude()).append("&").append(point.getLongitude());
+        res.append("/").append(path);
+        return res.toString();
     }
 }

@@ -12,6 +12,7 @@ import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 
 import java.io.IOException;
@@ -28,6 +29,8 @@ class LocationSolver {
         void displayError(@NonNull CharSequence message);
 
         void setLocationProgressMessage(@NonNull CharSequence text);
+
+        void setLocation(@Nullable Location location);
 
         void setLocationResults(@NonNull List<Spot> addresses);
     }
@@ -99,6 +102,7 @@ class LocationSolver {
         @Override
         public void onLocationChanged(Location location) {
             listener.setLocationProgressMessage(activity.getText(R.string.street_lookup));
+            listener.setLocation(location);
             new QueryAddress(activity).execute(location);
         }
 
@@ -114,6 +118,7 @@ class LocationSolver {
         public void onProviderDisabled(String provider) {
             listener.setLocationResults(Collections.<Spot>emptyList());
             listener.displayError(activity.getString(R.string.location_provider_disabled, provider));
+            listener.setLocation(null);
         }
     };
 

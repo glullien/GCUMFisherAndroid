@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -46,6 +47,8 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
+
+import gcum.gcumfisher.connection.Point;
 
 /**
  * Main page
@@ -87,6 +90,12 @@ public class WelcomeActivity extends Activity {
      */
     @Nullable
     private Spot forcedAddress;
+
+    /**
+     * Brut current location
+     */
+    @Nullable
+    private Location location;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -203,6 +212,11 @@ public class WelcomeActivity extends Activity {
                 if (getAddress() == null) setStreetTextView(text, R.color.progress);
             }
 
+            @Override
+            public void setLocation(@Nullable Location location) {
+                WelcomeActivity.this.location = location;
+            }
+
             /**
              * Called when the GPS find a spot
              */
@@ -245,7 +259,7 @@ public class WelcomeActivity extends Activity {
         if (takePictureIntent.resolveActivity(getPackageManager()) == null)
             displayError(R.string.cannot_take_picture);
         else try {
-            File photoFile = createImageFile(System.currentTimeMillis());
+            File photoFile = createImageFile(System.currentTimeMillis(), location);
             Uri photoURI = FileProvider.getUriForFile(this, "gcum.gcumfisher.fileprovider", photoFile);
             takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
             startActivityForResult(takePictureIntent, TAKE_PHOTO_REQUEST);
@@ -266,10 +280,11 @@ public class WelcomeActivity extends Activity {
      * Create a new file to store a photo.
      * Side effect : fill the nextPhoto field that will be used by addNextPhoto()
      */
-    private File createImageFile(long date) throws IOException {
-        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-        File image = File.createTempFile("GCUM", ".JPEG", storageDir);
-        nextPhoto = new Photo(image.getAbsolutePath(), date);
+    private File createImageFile(long date, @Nullable final Location location) throws IOException {
+        final File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        final File image = File.createTempFile("GCUM", ".JPEG", storageDir);
+        final Point point = (location != null)?new Point(location):null;
+        nextPhoto = new Photo(image.getAbsolutePath(), date, point);
         return image;
     }
 
@@ -292,7 +307,7 @@ public class WelcomeActivity extends Activity {
     private void saveAsNextPhoto(@NonNull String path) {
         try {
             File source = new File(path);
-            File f = createImageFile(source.lastModified());
+            File f = createImageFile(source.lastModified(), null);
             FileOutputStream out = new FileOutputStream(f);
             InputStream in = new FileInputStream(source);
             byte[] buf = new byte[1024];
@@ -638,7 +653,7 @@ public class WelcomeActivity extends Activity {
             intent.putExtra(SendingReportService.STREET, address.street);
             intent.putExtra(SendingReportService.DISTRICT, address.district);
             intent.putExtra(SendingReportService.IMAGE_SIZE, PreferencesActivity.getImageSize(getApplicationContext()).name());
-            intent.putExtra(SendingReportService.IMAGE_QUALITY, 95);
+            intent.putExtra(SendingReportService.IMAGE_QUALITY, PreferencesActivity.getImageQuality(getApplicationContext()));
             intent.putStringArrayListExtra(SendingReportService.IMAGES, Photo.toArrayList(photos));
             startService(intent);
             updateSendButton();

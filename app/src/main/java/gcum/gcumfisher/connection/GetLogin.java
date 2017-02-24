@@ -1,6 +1,8 @@
 package gcum.gcumfisher.connection;
 
 
+import android.support.annotation.NonNull;
+
 import com.android.internal.http.multipart.FilePart;
 import com.android.internal.http.multipart.MultipartEntity;
 import com.android.internal.http.multipart.Part;
@@ -35,7 +37,8 @@ import gcum.gcumfisher.Photo;
 
 public class GetLogin {
 
-    private static final String baseURL = "http://www.gcum.lol/";
+    //private static final String baseURL = "http://www.gcum.lol/";
+    private static final String baseURL = "http://192.168.1.13:8080/";
 
     private static String readStream(InputStream in) {
         BufferedReader reader = null;
@@ -125,7 +128,7 @@ public class GetLogin {
         else throw new Exception(res.getString("message"));
     }
 
-    public static void uploadAndReport(AutoLogin autoLogin, String street, int district, final Photo image) throws Exception {
+    public static void uploadAndReport(@NonNull final AutoLogin autoLogin, @NonNull final String street, final int district, @NonNull final Photo image) throws Exception {
         final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.FRANCE);
         dateFormat.setTimeZone(TimeZone.getTimeZone("Europe/Paris"));
         final Map<String, String> params = new HashMap<>();
@@ -133,6 +136,10 @@ public class GetLogin {
         params.put("street", street);
         params.put("district", Integer.toString(district));
         params.put("date", dateFormat.format(new Date(image.date)));
+        if (image.point != null) {
+            params.put("latitude", Long.toString(image.point.getLatitude()));
+            params.put("longitude", Long.toString(image.point.getLongitude()));
+        }
         final File file = new File(image.path);
         final FilePart part = new FilePart(file.getName(), file, "image/jpeg", "UTF-8");
         JSONObject res = queryJson("uploadAndReport", params, part);

@@ -1,5 +1,8 @@
 package gcum.gcumfisher.connection;
 
+import android.location.Location;
+import android.support.annotation.NonNull;
+
 import com.google.android.gms.maps.model.LatLng;
 
 public class Point {
@@ -9,6 +12,10 @@ public class Point {
     public Point(long latitude, long longitude) {
         this.latitude = latitude;
         this.longitude = longitude;
+    }
+    public Point(@NonNull Location location) {
+        this.latitude = Math.round(location.getLatitude()*1E5);
+        this.longitude = Math.round(location.getLongitude()*1E5);
     }
 
     public LatLng toLatLng() {

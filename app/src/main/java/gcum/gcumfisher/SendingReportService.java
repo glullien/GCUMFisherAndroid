@@ -39,15 +39,17 @@ public class SendingReportService extends IntentService {
         final ResultReceiver receiver = intent.getParcelableExtra(RECEIVER);
         try {
             final AutoLogin autoLogin = LoginActivity.getAutoLogin(getApplicationContext());
-            final String street = intent.getStringExtra(STREET);
-            final int district = intent.getIntExtra(DISTRICT, 0);
-            final List<Photo> photos = Photo.fromArrayList(intent.getStringArrayListExtra(IMAGES));
-            for (int i = 0; i < photos.size(); i++) {
-                deliverProgress(receiver, getString(R.string.sending_images, i + 1, photos.size()));
-                GetLogin.uploadAndReport(autoLogin, street, district, photos.get(i));
+            if (autoLogin == null) deliverError(receiver, "Aucun login");
+            else {
+                final String street = intent.getStringExtra(STREET);
+                final int district = intent.getIntExtra(DISTRICT, Integer.MIN_VALUE);
+                final List<Photo> photos = Photo.fromArrayList(intent.getStringArrayListExtra(IMAGES));
+                for (int i = 0; i < photos.size(); i++) {
+                    deliverProgress(receiver, getString(R.string.sending_images, i + 1, photos.size()));
+                    GetLogin.uploadAndReport(autoLogin, street, district, photos.get(i));
+                }
+                deliverSuccess(receiver);
             }
-
-            deliverSuccess(receiver);
         } catch (Exception e) {
             e.printStackTrace();
             deliverError(receiver, "Err: " + e);
