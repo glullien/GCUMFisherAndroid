@@ -1,7 +1,6 @@
 package gcum.gcumfisher;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -17,7 +16,10 @@ import android.widget.ProgressBar;
 import java.util.ArrayList;
 import java.util.List;
 
-import gcum.gcumfisher.opendataparisfr.Request;
+import gcum.gcumfisher.connection.GetLogin;
+import gcum.gcumfisher.connection.Point;
+import gcum.gcumfisher.connection.ServerPhoto;
+import gcum.gcumfisher.util.AsyncTaskE;
 
 /**
  * Page pour chercher une adresse à la main
@@ -28,21 +30,16 @@ public class SetLocationActivity extends Activity {
     public static final int CANCELED = 2;
     public static final String FORCE_ADDRESS_STREET = "gcum.gcumfisher.SetLocationActivity.FORCE_ADDRESS_STREET";
     public static final String FORCE_ADDRESS_DISTRICT = "gcum.gcumfisher.SetLocationActivity.FORCE_ADDRESS_DISTRICT";
+    public static final String LATITUDE = "gcum.gcumfisher.SetLocationActivity.LATITUDE";
+    public static final String LONGITUDE = "gcum.gcumfisher.SetLocationActivity.LONGITUDE";
 
     /**
      * Proposition d'adresses
      */
     private final List<Spot> spots = new ArrayList<>();
+    private List<Spot> closestSpots = null;
 
-    /**
-     * Background task pour chercher une ruee
-     */
-    class QueryAddress extends Request {
-
-        QueryAddress(@NonNull Context context) {
-            super(context.getResources(), 10);
-        }
-
+    class QueryServerAddress extends AsyncTaskE<String, Boolean, List<Spot>> {
         @Override
         protected void onPreExecute() {
             ProgressBar wheel = (ProgressBar) findViewById(R.id.search_street_progress);
@@ -50,19 +47,33 @@ public class SetLocationActivity extends Activity {
             wheel.setIndeterminate(true);
         }
 
-        /**
-         * Appelé quand une adresse possible est trouvée
-         */
         @Override
-        protected void onProgressUpdate(Spot... spots) {
-            if ((spots != null) && !isCancelled())
-                for (Spot spot : spots) if (spot != null) addSpot(spot);
+        protected void onPostExecuteSuccess(List<Spot> spots) {
+            if ((spots != null) && !isCancelled()) addSpots(spots);
+            findViewById(R.id.search_street_progress).setVisibility(View.GONE);
         }
 
         @Override
-        protected void onPostExecute(Integer integer) {
+        protected void onPostExecuteError(Exception error) {
             findViewById(R.id.search_street_progress).setVisibility(View.GONE);
         }
+
+        @Override
+        protected List<Spot> doInBackgroundOrCrash(String[] params) throws Exception {
+            List<Spot> spots = new ArrayList<>(10);
+            for (ServerPhoto.Address address : GetLogin.searchAddress(params[0], 10)) {
+                spots.add(new Spot(address.getStreet(), address.getDistrict()));
+            }
+            return spots;
+        }
+    }
+
+    /**
+     * Ajoute des adresses possible à la page
+     */
+    private void addSpots(@NonNull List<Spot> spots) {
+        for (final Spot spot : spots) if ((spot != null) && !this.spots.contains(spot)) this.spots.add(spot);
+        updatePossibleSpots();
     }
 
     /**
@@ -103,9 +114,38 @@ public class SetLocationActivity extends Activity {
         });
 
         findViewById(R.id.search_street_progress).setVisibility(View.GONE);
+
+        final Intent intent = getIntent();
+        final double latitude = intent.getDoubleExtra(LATITUDE, Double.NaN);
+        final double longitude = intent.getDoubleExtra(LONGITUDE, Double.NaN);
+        if ((!Double.isNaN(latitude)) && (!Double.isNaN(longitude)))
+            new QueryClosestStreets().execute(new Point(latitude, longitude));
     }
 
-    private QueryAddress currentLookup;
+    private class QueryClosestStreets extends AsyncTaskE<Point, Boolean, List<Spot>> {
+        @Override
+        protected void onPostExecuteError(Exception error) {
+        }
+
+        @Override
+        protected void onPostExecuteSuccess(List<Spot> spots) {
+            closestSpots = spots;
+            if (((EditText) findViewById(R.id.streetInput)).getText().toString().length() < 2)
+                addSpots(spots);
+        }
+
+        @Override
+        protected List<Spot> doInBackgroundOrCrash(Point[] params) throws Exception {
+            if ((params == null) || (params.length == 0)) throw new Exception("missing location");
+            final List<ServerPhoto.Address> addresses = GetLogin.searchClosest(params[0], 10);
+            List<Spot> spots = new ArrayList<>(addresses.size());
+            for (final ServerPhoto.Address address : addresses)
+                spots.add(new Spot(address.getStreet(), address.getDistrict()));
+            return spots;
+        }
+    }
+
+    private QueryServerAddress currentLookup;
 
     /**
      * Lance une nouvelle recherche
@@ -115,11 +155,11 @@ public class SetLocationActivity extends Activity {
         if (currentLookup != null) currentLookup.cancel(false);
         spots.clear();
         updatePossibleSpots();
-        if (input.length() > 0) {
+        if (input.length() > 1) {
             // Start la nouvelle recherche (appel asynchrone)
-            currentLookup = new QueryAddress(SetLocationActivity.this);
+            currentLookup = new QueryServerAddress();
             currentLookup.execute(input);
-        }
+        } else if (closestSpots != null) addSpots(closestSpots);
     }
 
     /**

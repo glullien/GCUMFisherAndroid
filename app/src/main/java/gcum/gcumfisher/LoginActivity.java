@@ -96,6 +96,8 @@ public class LoginActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.login);
+
+        ((TextView) findViewById(R.id.info)).setText(GetLogin.baseURL);
     }
 
     public void login(View view) {

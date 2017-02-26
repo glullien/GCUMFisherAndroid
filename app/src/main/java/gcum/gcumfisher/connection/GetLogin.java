@@ -2,6 +2,7 @@ package gcum.gcumfisher.connection;
 
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.android.internal.http.multipart.FilePart;
 import com.android.internal.http.multipart.MultipartEntity;
@@ -37,8 +38,8 @@ import gcum.gcumfisher.Photo;
 
 public class GetLogin {
 
-    //private static final String baseURL = "http://www.gcum.lol/";
-    private static final String baseURL = "http://192.168.1.13:8080/";
+    public static final String baseURL = "http://www.gcum.lol/";
+    //public static final String baseURL = "http://192.168.1.13:8080/";
 
     private static String readStream(InputStream in) {
         BufferedReader reader = null;
@@ -165,6 +166,17 @@ public class GetLogin {
         return list;
     }
 
+    public static List<ServerPhoto> getList(int number, @Nullable String start) throws Exception {
+        final Map<String, String> params = new HashMap<>();
+        params.put("district", "All");
+        params.put("start", (start == null) ? "Latest" : start);
+        params.put("number", Integer.toString(number));
+        final JSONObject res = queryJson("getList", params);
+        if (!res.getString("result").equals("success"))
+            throw new Exception(res.getString("message"));
+        return getServerPhotos(res.getJSONArray("photos"));
+    }
+
     public static List<ServerPhoto> getPointInfo(Point point) throws Exception {
         final Map<String, String> params = new HashMap<>();
         params.put("latitude", Long.toString(point.getLatitude()));
@@ -175,22 +187,31 @@ public class GetLogin {
         final JSONObject res = queryJson("getPointInfo", params);
         if (!res.getString("result").equals("success"))
             throw new Exception(res.getString("message"));
-        final JSONArray photos = res.getJSONArray("photos");
-        final List<ServerPhoto> list = new ArrayList<>(photos.length());
-        for (int i = 0; i < photos.length(); i++) {
-            JSONObject o = photos.getJSONObject(i);
-            list.add(new ServerPhoto(
-                    o.getString("id"),
-                    o.getString("date"),
-                    o.getString("time"),
-                    ServerPhoto.CoordinatesSource.valueOf(o.getString("locationSource")),
-                    new Point(o.getLong("latitude"), o.getLong("longitude")),
-                    o.optString("username", null),
-                    o.getInt("likesCount"),
-                    o.getBoolean("isLiked")));
+        return getServerPhotos(res.getJSONArray("photos"));
+    }
 
-        }
+    @NonNull
+    private static List<ServerPhoto> getServerPhotos(JSONArray photos) throws JSONException {
+        final List<ServerPhoto> list = new ArrayList<>(photos.length());
+        for (int i = 0; i < photos.length(); i++) list.add(getServerPhoto(photos.getJSONObject(i)));
         return list;
+    }
+
+    @NonNull
+    private static ServerPhoto getServerPhoto(@NonNull JSONObject o) throws JSONException {
+        ServerPhoto.Address address = new ServerPhoto.Address(o.getString("street"), o.getInt("district"), o.getString("city"));
+        Point point = new Point(o.getLong("latitude"), o.getLong("longitude"));
+        ServerPhoto.CoordinatesSource coordinatesSource = ServerPhoto.CoordinatesSource.valueOf(o.getString("locationSource"));
+        ServerPhoto.Coordinates coordinates = new ServerPhoto.Coordinates(point, coordinatesSource);
+        ServerPhoto.Location location = new ServerPhoto.Location(address, coordinates);
+        return new ServerPhoto(
+                o.getString("id"),
+                o.getString("date"),
+                o.getString("time"),
+                location,
+                o.optString("username", null),
+                o.getInt("likesCount"),
+                o.getBoolean("isLiked"));
     }
 
     public static InputStream getPhotoInputStream(String id, int maxSize) throws Exception {
@@ -200,4 +221,38 @@ public class GetLogin {
         conn.connect();
         return conn.getInputStream();
     }
+
+    @NonNull
+    public static List<ServerPhoto.Address> searchAddress(@NonNull String pattern, int nbAnswers) throws Exception {
+        final Map<String, String> params = new HashMap<>();
+        params.put("pattern", pattern);
+        params.put("nbAnswers", Integer.toString(nbAnswers));
+        final JSONObject res = queryJson("searchAddress", params);
+        if (!res.getString("result").equals("success"))
+            throw new Exception(res.getString("message"));
+        return getAddresses(res.getJSONArray("streets"));
+    }
+
+    @NonNull
+    public static List<ServerPhoto.Address> searchClosest(@NonNull Point point, int nb) throws Exception {
+        final Map<String, String> params = new HashMap<>();
+        params.put("latitude", Long.toString(point.getLatitude()));
+        params.put("longitude", Long.toString(point.getLongitude()));
+        params.put("nb", Integer.toString(nb));
+        final JSONObject res = queryJson("searchClosest", params);
+        if (!res.getString("result").equals("success"))
+            throw new Exception(res.getString("message"));
+        return getAddresses(res.getJSONArray("streets"));
+    }
+
+    @NonNull
+    private static List<ServerPhoto.Address> getAddresses(@NonNull JSONArray streets) throws JSONException {
+        final List<ServerPhoto.Address> list = new ArrayList<>(streets.length());
+        for (int i = 0; i < streets.length(); i++) {
+            final JSONObject o = streets.getJSONObject(i);
+            list.add(new ServerPhoto.Address(o.getString("street"), o.getInt("district"), o.getString("city")));
+        }
+        return list;
+    }
+
 }

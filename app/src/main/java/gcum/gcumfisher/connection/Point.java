@@ -13,9 +13,14 @@ public class Point {
         this.latitude = latitude;
         this.longitude = longitude;
     }
+
+    public Point(double latitude, double longitude) {
+        this.latitude = Math.round(latitude * 1E5);
+        this.longitude = Math.round(longitude * 1E5);
+    }
+
     public Point(@NonNull Location location) {
-        this.latitude = Math.round(location.getLatitude()*1E5);
-        this.longitude = Math.round(location.getLongitude()*1E5);
+        this(location.getLatitude(), location.getLongitude());
     }
 
     public LatLng toLatLng() {

@@ -156,7 +156,12 @@ public class WelcomeActivity extends Activity {
                 startActivityForResult(new Intent(this, PreferencesActivity.class), PREFERENCES_REQUEST);
                 return true;
             case R.id.map:
-                startActivityForResult(new Intent(this, MapActivity.class), PREFERENCES_REQUEST);
+                startActivity(new Intent(this, MapActivity.class));
+                return true;
+            case R.id.list:
+                final Intent intent = new Intent(this, ListActivity.class);
+                intent.putExtra(ListActivity.TYPE, ListActivity.ALL);
+                startActivity(intent);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -283,7 +288,7 @@ public class WelcomeActivity extends Activity {
     private File createImageFile(long date, @Nullable final Location location) throws IOException {
         final File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
         final File image = File.createTempFile("GCUM", ".JPEG", storageDir);
-        final Point point = (location != null)?new Point(location):null;
+        final Point point = (location != null) ? new Point(location) : null;
         nextPhoto = new Photo(image.getAbsolutePath(), date, point);
         return image;
     }
@@ -515,9 +520,15 @@ public class WelcomeActivity extends Activity {
      */
     public void adjustLocation(View view) {
         // Switch between forced address and automatic address provided by the GPS
-        if (forcedAddress == null)
-            startActivityForResult(new Intent(this, SetLocationActivity.class), ADJUST_LOCATION_REQUEST);
-        else {
+        if (forcedAddress == null) {
+            final Intent intent = new Intent(this, SetLocationActivity.class);
+            final Location location = this.location;
+            if (location != null) {
+                intent.putExtra(SetLocationActivity.LATITUDE, location.getLatitude());
+                intent.putExtra(SetLocationActivity.LONGITUDE, location.getLongitude());
+            }
+            startActivityForResult(intent, ADJUST_LOCATION_REQUEST);
+        } else {
             forcedAddress = null;
             ((ImageButton) findViewById(R.id.adjustLocation)).setImageResource(android.R.drawable.ic_menu_edit);
             updateLocation();

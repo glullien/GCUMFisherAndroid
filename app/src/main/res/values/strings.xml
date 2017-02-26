@@ -47,4 +47,6 @@
     <string name="images_quality">Qualité des images</string>
     <string name="images_quality_result">%d%%</string>
     <string name="map">Carte</string>
+    <string name="list">Liste</string>
+    <string name="close_to_me">Près de moi</string>
 </resources>

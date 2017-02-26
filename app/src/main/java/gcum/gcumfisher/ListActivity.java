@@ -24,6 +24,7 @@ import gcum.gcumfisher.util.AsyncTaskE;
 public class ListActivity extends Activity {
     static final String TYPE = "TYPE";
     static final int FOR_ONE_POINT = 1;
+    static final int ALL = 2;
     static final String LATITUDE = "LATITUDE";
     static final String LONGITUDE = "LONGITUDE";
 
@@ -34,19 +35,14 @@ public class ListActivity extends Activity {
 
         Intent intent = getIntent();
         if (intent != null) switch (intent.getIntExtra(TYPE, -1)) {
+            case ALL:
+                new GetList().execute();
+                break;
             case FOR_ONE_POINT:
                 Point point = new Point(intent.getLongExtra(LATITUDE, 0), intent.getLongExtra(LONGITUDE, 0));
                 new GetPointInfo().execute(point);
+                break;
         }
-    }
-
-    @NonNull
-    private ImageView getImageView(@NonNull ServerPhoto photo) throws Exception {
-        final int thumbnailSize = findViewById(R.id.imagesScroll).getWidth() - 10;
-        final Bitmap bitmap = BitmapFactory.decodeStream(GetLogin.getPhotoInputStream(photo.getId(), thumbnailSize));
-        final ImageView imageView = new ImageView(this);
-        imageView.setImageBitmap(bitmap);
-        return imageView;
     }
 
     private List<ServerPhoto> photos;
@@ -58,7 +54,7 @@ public class ListActivity extends Activity {
         final int thumbnailSize = findViewById(R.id.imagesScroll).getWidth() - 10;
         ((ViewGroup) findViewById(R.id.images)).removeAllViews();
         new GetPhotos(thumbnailSize).execute(photos.toArray(new ServerPhoto[photos.size()]));
-        ((TextView) findViewById(R.id.info)).setText("Loaded "+loaded+"/"+photos.size());
+        ((TextView) findViewById(R.id.info)).setText("Loaded " + loaded + "/" + photos.size());
     }
 
     @NonNull
@@ -92,7 +88,7 @@ public class ListActivity extends Activity {
                 final GridLayout.LayoutParams lp = new GridLayout.LayoutParams(GridLayout.spec(loaded), GridLayout.spec(0));
                 lp.setMargins(5, 0, 5, 0);
                 images.addView(view, lp);
-                ((TextView) findViewById(R.id.info)).setText("Loaded "+(++loaded)+"/"+photos.size());
+                ((TextView) findViewById(R.id.info)).setText("Loaded " + (++loaded) + "/" + photos.size());
             }
         }
 
@@ -103,6 +99,23 @@ public class ListActivity extends Activity {
                 publishProgress(bitmap);
             }
             return true;
+        }
+    }
+
+    class GetList extends AsyncTaskE<Boolean, Boolean, List<ServerPhoto>> {
+        @Override
+        protected void onPostExecuteSuccess(List<ServerPhoto> photos) {
+            if (photos != null) showPhotos(photos);
+        }
+
+        @Override
+        protected void onPostExecuteError(Exception error) {
+            displayError("Internal error: " + error);
+        }
+
+        @Override
+        protected List<ServerPhoto> doInBackgroundOrCrash(Boolean[] params) throws Exception {
+            return GetLogin.getList(20, null);
         }
     }
 

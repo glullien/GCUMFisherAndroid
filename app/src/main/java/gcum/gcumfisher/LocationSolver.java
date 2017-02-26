@@ -4,21 +4,21 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
-import android.location.Address;
-import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
+
+import gcum.gcumfisher.connection.GetLogin;
+import gcum.gcumfisher.connection.Point;
+import gcum.gcumfisher.connection.ServerPhoto;
+import gcum.gcumfisher.util.AsyncTaskE;
 
 /**
  * Track the location using GPS and use Geocoder to translate the position into spots
@@ -45,65 +45,32 @@ class LocationSolver {
         this.maxResults = maxResults;
     }
 
-    /**
-     * Background task pour interroger le serveur
-     */
-    private class QueryAddress extends AsyncTask<Location, Spot.FilteredResults, Integer> {
-
-        private final Geocoder geocoder;
-
-        QueryAddress(@NonNull Context context) {
-            geocoder = new Geocoder(context, Locale.getDefault());
-        }
-
-        /**
-         * Appelé quand une adresse possible est trouvée
-         */
+    private class QueryStreet extends AsyncTaskE<Location, Boolean, Spot> {
         @Override
-        protected void onProgressUpdate(Spot.FilteredResults... spots) {
-            if ((spots != null) && (spots.length == 1)) update(spots[0]);
-            else listener.displayError(activity.getString(R.string.error));
+        protected void onPostExecuteError(Exception error) {
+            listener.displayError(activity.getString(R.string.error));
         }
 
-        private void update(Spot.FilteredResults spots) {
-            if (!spots.isEmpty()) listener.setLocationResults(spots.spots);
-            else if (spots.outOfParis != null)
-                listener.displayError(activity.getString(R.string.not_in_paris, spots.outOfParis));
-            else listener.displayError(activity.getString(R.string.error));
-        }
-
-        /**
-         * Commence la recherche avec le texte entré par le user
-         */
         @Override
-        protected Integer doInBackground(Location... params) {
-            if (params != null) callGeocoder(params[0]);
-            return 0;
+        protected void onPostExecuteSuccess(Spot spot) {
+            listener.setLocationResults(Collections.singletonList(spot));
         }
 
-        private void callGeocoder(@NonNull Location location) {
-            try {
-                // Interroge le serveur (appel synchrone) sur les rue dans Paris (coordonnées GPS)
-                final List<Address> addresses = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), maxResults);
-                if (isCancelled()) return;
-                if (addresses != null) {
-                    // Vérifie que l'adresse est parisienne avant de la proposer au user
-                    final Spot.FilteredResults spots = Spot.filterParisSpots(addresses);
-                    publishProgress(spots);
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        @Override
+        protected Spot doInBackgroundOrCrash(Location[] params) throws Exception {
+            if ((params == null) || (params.length == 0)) throw new Exception("missing location");
+            final List<ServerPhoto.Address> addresses= GetLogin.searchClosest(new Point(params[0]), 1);
+            if (addresses.size() == 0) throw new Exception("missing addresses");
+            return new Spot(addresses.get(0).getStreet(), addresses.get(0).getDistrict());
         }
     }
-
 
     private LocationListener locationListener = new LocationListener() {
         @Override
         public void onLocationChanged(Location location) {
             listener.setLocationProgressMessage(activity.getText(R.string.street_lookup));
             listener.setLocation(location);
-            new QueryAddress(activity).execute(location);
+            new QueryStreet().execute(location);
         }
 
         @Override
