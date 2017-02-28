@@ -719,8 +719,7 @@ public class WelcomeActivity extends Activity {
         final StringBuilder message = new StringBuilder();
         message.append("Version: 0.9\n");
         message.append("Webdav");
-        message.append("\nHost:\n").append(getString(R.string.webdav_host));
-        message.append("\nSite:\n").append(getString(R.string.webdav_site)).append(getString(R.string.webdav_root));
+        message.append("\nBase url:\n").append(getString(R.string.base_url));
         new AlertDialog.Builder(this).setTitle("Info").setMessage(message).setIcon(android.R.drawable.ic_dialog_info).show();
     }
 }

@@ -7,10 +7,12 @@ import android.os.ResultReceiver;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.util.List;
 
 import gcum.gcumfisher.connection.AutoLogin;
-import gcum.gcumfisher.connection.GetLogin;
+import gcum.gcumfisher.connection.Server;
 
 /**
  * Background service pour l'envoi des fichiers vers le cloud
@@ -28,9 +30,16 @@ public class SendingReportService extends IntentService {
     public static final int RESULT_CODE_SUCCESS = 0;
     public static final int RESULT_CODE_PROGRESS = 1;
     public static final int RESULT_CODE_ERROR = 2;
+    private Server server;
 
     public SendingReportService() {
         super("SendingReportService");
+    }
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        server = new Server(getResources());
     }
 
     @Override
@@ -43,10 +52,20 @@ public class SendingReportService extends IntentService {
             else {
                 final String street = intent.getStringExtra(STREET);
                 final int district = intent.getIntExtra(DISTRICT, Integer.MIN_VALUE);
+                final int quality = intent.getIntExtra(IMAGE_QUALITY, 95);
+                final PreferencesActivity.ImageSize imageSize = PreferencesActivity.ImageSize.valueOf(intent.getStringExtra(IMAGE_SIZE));
                 final List<Photo> photos = Photo.fromArrayList(intent.getStringArrayListExtra(IMAGES));
                 for (int i = 0; i < photos.size(); i++) {
                     deliverProgress(receiver, getString(R.string.sending_images, i + 1, photos.size()));
-                    GetLogin.uploadAndReport(autoLogin, street, district, photos.get(i));
+                    final Photo photo = photos.get(i);
+                    byte[] resized = imageSize.resize(photo, quality, getApplicationContext());
+                    File tmpFile = File.createTempFile("GcumReport", photo.extension());
+                    FileOutputStream o = new FileOutputStream(tmpFile);
+                    o.write(resized);
+                    o.close();
+                    server.uploadAndReport(autoLogin, street, district, photo.date, photo.point, tmpFile.getPath());
+                    final boolean deleted = tmpFile.delete();
+                    if (!deleted) throw new Exception("Cannot delete " + tmpFile);
                 }
                 deliverSuccess(receiver);
             }

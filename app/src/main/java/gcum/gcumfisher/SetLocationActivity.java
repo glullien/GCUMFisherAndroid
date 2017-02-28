@@ -16,8 +16,8 @@ import android.widget.ProgressBar;
 import java.util.ArrayList;
 import java.util.List;
 
-import gcum.gcumfisher.connection.GetLogin;
 import gcum.gcumfisher.connection.Point;
+import gcum.gcumfisher.connection.Server;
 import gcum.gcumfisher.connection.ServerPhoto;
 import gcum.gcumfisher.util.AsyncTaskE;
 
@@ -38,6 +38,7 @@ public class SetLocationActivity extends Activity {
      */
     private final List<Spot> spots = new ArrayList<>();
     private List<Spot> closestSpots = null;
+    private Server server;
 
     class QueryServerAddress extends AsyncTaskE<String, Boolean, List<Spot>> {
         @Override
@@ -61,7 +62,7 @@ public class SetLocationActivity extends Activity {
         @Override
         protected List<Spot> doInBackgroundOrCrash(String[] params) throws Exception {
             List<Spot> spots = new ArrayList<>(10);
-            for (ServerPhoto.Address address : GetLogin.searchAddress(params[0], 10)) {
+            for (ServerPhoto.Address address : server.searchAddress(params[0], 10)) {
                 spots.add(new Spot(address.getStreet(), address.getDistrict()));
             }
             return spots;
@@ -89,6 +90,7 @@ public class SetLocationActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.set_location);
+        server = new Server(getResources());
 
         ((EditText) findViewById(R.id.streetInput)).addTextChangedListener(new TextWatcher() {
             @Override
@@ -137,7 +139,7 @@ public class SetLocationActivity extends Activity {
         @Override
         protected List<Spot> doInBackgroundOrCrash(Point[] params) throws Exception {
             if ((params == null) || (params.length == 0)) throw new Exception("missing location");
-            final List<ServerPhoto.Address> addresses = GetLogin.searchClosest(params[0], 10);
+            final List<ServerPhoto.Address> addresses = server.searchClosest(params[0], 10);
             List<Spot> spots = new ArrayList<>(addresses.size());
             for (final ServerPhoto.Address address : addresses)
                 spots.add(new Spot(address.getStreet(), address.getDistrict()));

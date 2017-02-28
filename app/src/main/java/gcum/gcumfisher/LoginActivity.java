@@ -12,7 +12,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import gcum.gcumfisher.connection.AutoLogin;
-import gcum.gcumfisher.connection.GetLogin;
+import gcum.gcumfisher.connection.Server;
 
 public class LoginActivity extends Activity {
 
@@ -21,6 +21,7 @@ public class LoginActivity extends Activity {
     private static final String PREFERENCES = "gcum.gcumfisher.LOGIN_PREFERENCES";
     public static final String KEY_CODE = "autoLoginCode";
     public static final String KEY_VALID_TO = "autoLoginValidTo";
+    private Server server;
 
     static class TestingResult {
         private final AutoLogin autoLogin;
@@ -58,7 +59,7 @@ public class LoginActivity extends Activity {
         @Override
         protected TestingResult doInBackground(String... params) {
             try {
-                return new TestingResult(GetLogin.getAutoLogin(credentials.username, credentials.password), null);
+                return new TestingResult(server.getAutoLogin(credentials.username, credentials.password), null);
             } catch (Exception e) {
                 e.printStackTrace();
                 return new TestingResult(null, e.getMessage());
@@ -96,8 +97,9 @@ public class LoginActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.login);
+        server = new Server(getResources());
 
-        ((TextView) findViewById(R.id.info)).setText(GetLogin.baseURL);
+        ((TextView) findViewById(R.id.info)).setText(server.getBaseUrl());
     }
 
     public void login(View view) {

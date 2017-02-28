@@ -15,8 +15,8 @@ import android.support.v4.app.ActivityCompat;
 import java.util.Collections;
 import java.util.List;
 
-import gcum.gcumfisher.connection.GetLogin;
 import gcum.gcumfisher.connection.Point;
+import gcum.gcumfisher.connection.Server;
 import gcum.gcumfisher.connection.ServerPhoto;
 import gcum.gcumfisher.util.AsyncTaskE;
 
@@ -24,6 +24,8 @@ import gcum.gcumfisher.util.AsyncTaskE;
  * Track the location using GPS and use Geocoder to translate the position into spots
  */
 class LocationSolver {
+
+    private final Server server;
 
     interface Listener {
         void displayError(@NonNull CharSequence message);
@@ -43,6 +45,7 @@ class LocationSolver {
         this.activity = activity;
         this.listener = listener;
         this.maxResults = maxResults;
+        server = new Server(activity.getResources());
     }
 
     private class QueryStreet extends AsyncTaskE<Location, Boolean, Spot> {
@@ -59,7 +62,7 @@ class LocationSolver {
         @Override
         protected Spot doInBackgroundOrCrash(Location[] params) throws Exception {
             if ((params == null) || (params.length == 0)) throw new Exception("missing location");
-            final List<ServerPhoto.Address> addresses= GetLogin.searchClosest(new Point(params[0]), 1);
+            final List<ServerPhoto.Address> addresses= server.searchClosest(new Point(params[0]), 1);
             if (addresses.size() == 0) throw new Exception("missing addresses");
             return new Spot(addresses.get(0).getStreet(), addresses.get(0).getDistrict());
         }

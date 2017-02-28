@@ -19,6 +19,8 @@
     <string name="images_sent">Images envoyées</string>
     <string name="back_to_the_hunt">Retour à la chasse</string>
     <string name="address_format">%1$s, dans le %2$de"</string>
+    <string name="date_format">%1$s"</string>
+    <string name="date_time_format">%1$s : %2$s"</string>
     <string name="success">Succès</string>
     <string name="required_confirmation">Confirmation requise</string>
     <string name="clear_all_photos_confirmation">Voulez-vous réellement retirer toutes les photos ?</string>
@@ -33,6 +35,7 @@
     <string name="password">Mot de passe</string>
     <string name="login">Se connecter</string>
     <string name="logout">Déconnecter</string>
+    <string name="should_be_login">Vous devez être connecté</string>
     <string name="invalid_username">Le pseudo doit être constitué de 1 à 20 caractères alphanumériques ou de _</string>
     <string name="invalid_password">Le mot de passe doit être constitué de 6 à 20 caractères</string>
     <string name="testing">Test de %s</string>

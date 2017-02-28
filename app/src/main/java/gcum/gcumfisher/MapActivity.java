@@ -18,13 +18,14 @@ import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.List;
 
-import gcum.gcumfisher.connection.GetLogin;
 import gcum.gcumfisher.connection.Point;
+import gcum.gcumfisher.connection.Server;
 import gcum.gcumfisher.util.AsyncTaskE;
 
 public class MapActivity extends Activity implements OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
 
     private static final int SHOW_LIST = 1;
+    private Server server;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -33,6 +34,7 @@ public class MapActivity extends Activity implements OnMapReadyCallback, GoogleM
 
         MapFragment mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+        server = new Server(getResources());
     }
 
     @Override
@@ -76,7 +78,7 @@ public class MapActivity extends Activity implements OnMapReadyCallback, GoogleM
 
         @Override
         protected List<Point> doInBackgroundOrCrash(Boolean[] params) throws Exception {
-            return GetLogin.getPoints();
+            return server.getPoints();
         }
     }
 

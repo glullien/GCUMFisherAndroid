@@ -17,12 +17,12 @@ import gcum.gcumfisher.connection.Point;
 
 public class Photo {
     @NonNull
-    public final String path;
+    private final String path;
 
     /**
      * Epoch time stamp
      */
-    public final long date;
+    final long date;
 
     @Nullable
     public final Point point;
@@ -128,5 +128,9 @@ public class Photo {
         if (point != null) res.append("&").append(point.getLatitude()).append("&").append(point.getLongitude());
         res.append("/").append(path);
         return res.toString();
+    }
+
+    String extension() {
+        return path.substring(path.lastIndexOf('.'));
     }
 }

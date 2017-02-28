@@ -1,7 +1,10 @@
 package gcum.gcumfisher.connection;
 
+import android.content.res.Resources;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+
+import gcum.gcumfisher.R;
 
 public class ServerPhoto {
 
@@ -23,6 +26,10 @@ public class ServerPhoto {
         public int getDistrict() {
             return district;
         }
+
+        public String getAddress(Resources resources) {
+            return resources.getString(R.string.address_format, street, district);
+        }
     }
 
     static class Coordinates {
@@ -43,6 +50,7 @@ public class ServerPhoto {
             this.address = address;
             this.coordinates = coordinates;
         }
+
     }
 
     enum CoordinatesSource {Street, Device}
@@ -99,6 +107,17 @@ public class ServerPhoto {
 
     public boolean isLiked() {
         return isLiked;
+    }
+
+    public String getDateTime(Resources resources) {
+        final String res;
+        if (time == null) res = resources.getString(R.string.date_format, date);
+        else res = resources.getString(R.string.date_time_format, date, time);
+        return res;
+    }
+
+    public String getAddress(Resources resources) {
+        return location.address.getAddress(resources);
     }
 }
 

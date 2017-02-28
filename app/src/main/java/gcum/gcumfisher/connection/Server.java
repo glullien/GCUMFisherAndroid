@@ -1,6 +1,6 @@
 package gcum.gcumfisher.connection;
 
-
+import android.content.res.Resources;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -34,12 +34,20 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
 
-import gcum.gcumfisher.Photo;
+import gcum.gcumfisher.R;
 
-public class GetLogin {
+public class Server {
+    @NonNull
+    private final String baseUrl;
 
-    public static final String baseURL = "http://www.gcum.lol/";
-    //public static final String baseURL = "http://192.168.1.13:8080/";
+    public Server(Resources resources) {
+        baseUrl = resources.getString(R.string.base_url);
+    }
+
+    @NonNull
+    public String getBaseUrl() {
+        return baseUrl;
+    }
 
     private static String readStream(InputStream in) {
         BufferedReader reader = null;
@@ -64,16 +72,16 @@ public class GetLogin {
         return builder.toString();
     }
 
-    private static JSONObject queryJson(String servlet, Map<String, String> params) throws IOException, JSONException {
+    private JSONObject queryJson(String servlet, Map<String, String> params) throws IOException, JSONException {
         return queryJson(servlet, params, null);
     }
 
-    private static JSONObject queryJson(String servlet, Map<String, String> params, Part part) throws IOException, JSONException {
+    private JSONObject queryJson(String servlet, Map<String, String> params, Part part) throws IOException, JSONException {
         return new JSONObject(readStream(query(servlet, params, part)));
     }
 
-    private static InputStream query(String servlet, Map<String, String> params, Part part) throws IOException, JSONException {
-        URL url = new URL(baseURL + servlet);
+    private InputStream query(@NonNull String servlet, Map<String, String> params, Part part) throws IOException, JSONException {
+        URL url = new URL(baseUrl + servlet);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setReadTimeout(10000);
         conn.setConnectTimeout(15000);
@@ -119,7 +127,7 @@ public class GetLogin {
         throw new IOException("Http error " + code);
     }
 
-    public static AutoLogin getAutoLogin(String username, String password) throws Exception {
+    public AutoLogin getAutoLogin(String username, String password) throws Exception {
         final Map<String, String> params = new HashMap<>();
         params.put("username", username);
         params.put("password", password);
@@ -129,26 +137,26 @@ public class GetLogin {
         else throw new Exception(res.getString("message"));
     }
 
-    public static void uploadAndReport(@NonNull final AutoLogin autoLogin, @NonNull final String street, final int district, @NonNull final Photo image) throws Exception {
+    public void uploadAndReport(@NonNull final AutoLogin autoLogin, @NonNull final String street, final int district, @NonNull final long date, @Nullable Point point, @NonNull String path) throws Exception {
         final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.FRANCE);
         dateFormat.setTimeZone(TimeZone.getTimeZone("Europe/Paris"));
         final Map<String, String> params = new HashMap<>();
         params.put("autoLogin", autoLogin.getCode());
         params.put("street", street);
         params.put("district", Integer.toString(district));
-        params.put("date", dateFormat.format(new Date(image.date)));
-        if (image.point != null) {
-            params.put("latitude", Long.toString(image.point.getLatitude()));
-            params.put("longitude", Long.toString(image.point.getLongitude()));
+        params.put("date", dateFormat.format(new Date(date)));
+        if (point != null) {
+            params.put("latitude", Long.toString(point.getLatitude()));
+            params.put("longitude", Long.toString(point.getLongitude()));
         }
-        final File file = new File(image.path);
+        final File file = new File(path);
         final FilePart part = new FilePart(file.getName(), file, "image/jpeg", "UTF-8");
         JSONObject res = queryJson("uploadAndReport", params, part);
         if (!res.getString("result").equals("success"))
             throw new Exception(res.getString("message"));
     }
 
-    public static List<Point> getPoints() throws Exception {
+    public List<Point> getPoints() throws Exception {
         final Map<String, String> params = new HashMap<>();
         params.put("zone", "All");
         params.put("timeFrame", "All");
@@ -166,7 +174,7 @@ public class GetLogin {
         return list;
     }
 
-    public static List<ServerPhoto> getList(int number, @Nullable String start) throws Exception {
+    public List<ServerPhoto> getList(int number, @Nullable String start) throws Exception {
         final Map<String, String> params = new HashMap<>();
         params.put("district", "All");
         params.put("start", (start == null) ? "Latest" : start);
@@ -177,7 +185,7 @@ public class GetLogin {
         return getServerPhotos(res.getJSONArray("photos"));
     }
 
-    public static List<ServerPhoto> getPointInfo(Point point) throws Exception {
+    public List<ServerPhoto> getPointInfo(Point point) throws Exception {
         final Map<String, String> params = new HashMap<>();
         params.put("latitude", Long.toString(point.getLatitude()));
         params.put("longitude", Long.toString(point.getLongitude()));
@@ -204,18 +212,19 @@ public class GetLogin {
         ServerPhoto.CoordinatesSource coordinatesSource = ServerPhoto.CoordinatesSource.valueOf(o.getString("locationSource"));
         ServerPhoto.Coordinates coordinates = new ServerPhoto.Coordinates(point, coordinatesSource);
         ServerPhoto.Location location = new ServerPhoto.Location(address, coordinates);
+        final String time = o.getString("time");
         return new ServerPhoto(
                 o.getString("id"),
                 o.getString("date"),
-                o.getString("time"),
+                "unknown".equals(time) ? null : time,
                 location,
                 o.optString("username", null),
                 o.getInt("likesCount"),
                 o.getBoolean("isLiked"));
     }
 
-    public static InputStream getPhotoInputStream(String id, int maxSize) throws Exception {
-        URL url = new URL(baseURL + "getPhoto?id=" + id + "&maxSize=" + maxSize);
+    public InputStream getPhotoInputStream(String id, int maxSize) throws Exception {
+        URL url = new URL(baseUrl + "getPhoto?id=" + id + "&maxSize=" + maxSize);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setDoInput(true);
         conn.connect();
@@ -223,7 +232,7 @@ public class GetLogin {
     }
 
     @NonNull
-    public static List<ServerPhoto.Address> searchAddress(@NonNull String pattern, int nbAnswers) throws Exception {
+    public List<ServerPhoto.Address> searchAddress(@NonNull String pattern, int nbAnswers) throws Exception {
         final Map<String, String> params = new HashMap<>();
         params.put("pattern", pattern);
         params.put("nbAnswers", Integer.toString(nbAnswers));
@@ -234,7 +243,7 @@ public class GetLogin {
     }
 
     @NonNull
-    public static List<ServerPhoto.Address> searchClosest(@NonNull Point point, int nb) throws Exception {
+    public List<ServerPhoto.Address> searchClosest(@NonNull Point point, int nb) throws Exception {
         final Map<String, String> params = new HashMap<>();
         params.put("latitude", Long.toString(point.getLatitude()));
         params.put("longitude", Long.toString(point.getLongitude()));
@@ -255,4 +264,13 @@ public class GetLogin {
         return list;
     }
 
+    public ToggleLikeResult toggleLike(@NonNull final AutoLogin autoLogin, @NonNull String photoId) throws Exception {
+        final Map<String, String> params = new HashMap<>();
+        params.put("autoLogin", autoLogin.getCode());
+        params.put("photoId", photoId);
+        final JSONObject res = queryJson("toggleLike", params);
+        if (!res.getString("result").equals("success"))
+            throw new Exception(res.getString("message"));
+        return new ToggleLikeResult(res.getInt("likesCount"), res.getBoolean("isLiked"));
+    }
 }
