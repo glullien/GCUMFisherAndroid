@@ -51,7 +51,8 @@ class LocationSolver {
     private class QueryStreet extends AsyncTaskE<Location, Boolean, Spot> {
         @Override
         protected void onPostExecuteError(Exception error) {
-            listener.displayError(activity.getString(R.string.error));
+            error.printStackTrace();
+            listener.displayError(activity.getString(R.string.error_message, error.getMessage()));
         }
 
         @Override

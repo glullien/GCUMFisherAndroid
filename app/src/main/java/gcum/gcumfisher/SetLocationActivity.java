@@ -12,6 +12,7 @@ import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -56,7 +57,11 @@ public class SetLocationActivity extends Activity {
 
         @Override
         protected void onPostExecuteError(Exception error) {
+            error.printStackTrace();
             findViewById(R.id.search_street_progress).setVisibility(View.GONE);
+            final TextView errorView = (TextView) findViewById(R.id.error);
+            errorView.setVisibility(View.VISIBLE);
+            errorView.setText(getResources().getString(R.string.error_message, error.getMessage()));
         }
 
         @Override
@@ -73,7 +78,8 @@ public class SetLocationActivity extends Activity {
      * Ajoute des adresses possible à la page
      */
     private void addSpots(@NonNull List<Spot> spots) {
-        for (final Spot spot : spots) if ((spot != null) && !this.spots.contains(spot)) this.spots.add(spot);
+        for (final Spot spot : spots)
+            if ((spot != null) && !this.spots.contains(spot)) this.spots.add(spot);
         updatePossibleSpots();
     }
 
@@ -116,6 +122,7 @@ public class SetLocationActivity extends Activity {
         });
 
         findViewById(R.id.search_street_progress).setVisibility(View.GONE);
+        findViewById(R.id.error).setVisibility(View.GONE);
 
         final Intent intent = getIntent();
         final double latitude = intent.getDoubleExtra(LATITUDE, Double.NaN);
@@ -156,6 +163,7 @@ public class SetLocationActivity extends Activity {
         // Annule la recherche en cours
         if (currentLookup != null) currentLookup.cancel(false);
         spots.clear();
+        findViewById(R.id.error).setVisibility(View.GONE);
         updatePossibleSpots();
         if (input.length() > 1) {
             // Start la nouvelle recherche (appel asynchrone)
