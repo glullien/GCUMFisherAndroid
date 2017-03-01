@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="base_url">http://www.gcum.lol/</string>
+    <string name="base_url">https://www.gcum.lol/</string>
 </resources>

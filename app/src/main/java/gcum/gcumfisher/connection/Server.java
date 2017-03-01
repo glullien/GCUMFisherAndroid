@@ -34,14 +34,19 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
 
+import javax.net.ssl.HttpsURLConnection;
+
 import gcum.gcumfisher.R;
 
 public class Server {
+    @NonNull
+    private final Resources resources;
     @NonNull
     private final String baseUrl;
 
     public Server(Resources resources) {
         baseUrl = resources.getString(R.string.base_url);
+        this.resources = resources;
     }
 
     @NonNull
@@ -72,17 +77,22 @@ public class Server {
         return builder.toString();
     }
 
-    private JSONObject queryJson(String servlet, Map<String, String> params) throws IOException, JSONException {
+    private JSONObject queryJson(String servlet, Map<String, String> params) throws Exception {
         return queryJson(servlet, params, null);
     }
 
-    private JSONObject queryJson(String servlet, Map<String, String> params, Part part) throws IOException, JSONException {
+    private JSONObject queryJson(String servlet, Map<String, String> params, Part part) throws Exception {
         return new JSONObject(readStream(query(servlet, params, part)));
     }
 
-    private InputStream query(@NonNull String servlet, Map<String, String> params, Part part) throws IOException, JSONException {
-        URL url = new URL(baseUrl + servlet);
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+    private HttpsURLConnection getConnection(@NonNull String url) throws Exception {
+        HttpsURLConnection conn = (HttpsURLConnection) new URL(url).openConnection();
+        conn.setSSLSocketFactory(SSL.getSSLSocketFactory(resources));
+        return conn;
+    }
+
+    private InputStream query(@NonNull String servlet, Map<String, String> params, Part part) throws Exception {
+        HttpsURLConnection conn = getConnection(baseUrl+servlet);
         conn.setReadTimeout(10000);
         conn.setConnectTimeout(15000);
         conn.setRequestMethod("POST");
@@ -224,8 +234,7 @@ public class Server {
     }
 
     public InputStream getPhotoInputStream(String id, int maxSize) throws Exception {
-        URL url = new URL(baseUrl + "getPhoto?id=" + id + "&maxSize=" + maxSize);
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        HttpsURLConnection conn = getConnection(baseUrl + "getPhoto?id=" + id + "&maxSize=" + maxSize);
         conn.setDoInput(true);
         conn.connect();
         return conn.getInputStream();
