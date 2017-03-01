@@ -25,6 +25,7 @@
     <string name="required_confirmation">Confirmation requise</string>
     <string name="clear_all_photos_confirmation">Voulez-vous réellement retirer toutes les photos ?</string>
     <string name="error">Erreur</string>
+    <string name="error_message">Erreur : %s</string>
     <string name="cannot_take_picture">Appareil photo non trouvé</string>
     <string name="cannot_save_photo">Erreur d\'écriture</string>
     <plurals name="age">
