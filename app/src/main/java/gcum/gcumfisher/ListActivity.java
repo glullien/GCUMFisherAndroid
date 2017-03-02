@@ -87,6 +87,12 @@ public class ListActivity extends Activity {
         }
     }
 
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        if (getPhotosTask != null) getPhotosTask.cancel(false);
+    }
+
     @NonNull
     private RelativeLayout.LayoutParams getCenterLayoutParams() {
         final RelativeLayout.LayoutParams res = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
