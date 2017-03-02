@@ -14,15 +14,19 @@ import android.support.annotation.StyleRes;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.GridLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import java.io.ByteArrayInputStream;
 import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import gcum.gcumfisher.connection.AutoLogin;
+import gcum.gcumfisher.connection.ImageLoader;
 import gcum.gcumfisher.connection.Point;
 import gcum.gcumfisher.connection.Server;
 import gcum.gcumfisher.connection.ServerPhoto;
@@ -35,6 +39,7 @@ public class ListActivity extends Activity {
     static final int ALL = 2;
     static final String LATITUDE = "LATITUDE";
     static final String LONGITUDE = "LONGITUDE";
+    public static final int BATCH_SIZE = 20;
     private Server server;
 
     @Override
@@ -55,16 +60,31 @@ public class ListActivity extends Activity {
         server = new Server(getResources());
     }
 
-    private List<ServerPhoto> photos;
-    private int loaded = 0;
+    private final Queue<ServerPhoto> photoToLoad = new ConcurrentLinkedQueue<>();
+    private GetPhotos getPhotosTask;
 
     private void showPhotos(List<ServerPhoto> photos) {
-        this.photos = photos;
-        loaded = 0;
-        final int thumbnailSize = findViewById(R.id.imagesScroll).getWidth() - 10;
+        if (getPhotosTask != null) getPhotosTask.cancel(false);
         ((ViewGroup) findViewById(R.id.images)).removeAllViews();
-        new GetPhotos(thumbnailSize).execute(photos.toArray(new ServerPhoto[photos.size()]));
-        ((TextView) findViewById(R.id.info)).setText("Loaded " + loaded + "/" + photos.size());
+        photoToLoad.clear();
+        photoToLoad.addAll(photos);
+        getPhotosTask = new GetPhotos();
+        getPhotosTask.execute();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (getPhotosTask != null) getPhotosTask.cancel(false);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onResume();
+        if (!photoToLoad.isEmpty()) {
+            getPhotosTask = new GetPhotos();
+            getPhotosTask.execute();
+        }
     }
 
     @NonNull
@@ -128,7 +148,7 @@ public class ListActivity extends Activity {
 
         @Override
         protected void onPostExecuteError(Exception error) {
-            displayError("Internal error: " + error);
+            displayError(getResources().getString(R.string.error_message, error.getMessage()));
         }
 
         @Override
@@ -137,16 +157,19 @@ public class ListActivity extends Activity {
         }
     }
 
-    class GetPhotos extends AsyncTaskE<ServerPhoto, PhotoBitmap, Boolean> {
+    class GetPhotos extends AsyncTaskE<Boolean, PhotoBitmap, Boolean> {
         private final int thumbnailSize;
+        private int loaded;
 
-        GetPhotos(int thumbnailSize) {
-            this.thumbnailSize = thumbnailSize;
+        GetPhotos() {
+            this.thumbnailSize = findViewById(R.id.imagesScroll).getWidth() - 10;
+            loaded = 0;
         }
 
         @Override
         protected void onPostExecuteError(Exception error) {
-            displayError("Internal error: " + error);
+            error.printStackTrace();
+            displayError(getResources().getString(R.string.error_message, error.getMessage()));
         }
 
         @NonNull
@@ -186,10 +209,18 @@ public class ListActivity extends Activity {
         @Override
         protected void onProgressUpdate(PhotoBitmap... photos) {
             final ViewGroup images = (ViewGroup) findViewById(R.id.images);
-            for (PhotoBitmap photo : photos) {
+            for (final PhotoBitmap photo : photos) {
                 final RelativeLayout view = new RelativeLayout(ListActivity.this);
                 final ImageView imageView = new ImageView(ListActivity.this);
                 imageView.setImageBitmap(photo.bitmap);
+                imageView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        final Intent intent = new Intent(ListActivity.this, PhotoActivity.class);
+                        intent.putExtra(PhotoActivity.PHOTO_ID, photo.serverPhoto.getId());
+                        startActivity(intent);
+                    }
+                });
                 view.addView(imageView, getCenterLayoutParams());
 
                 final ServerPhoto serverPhoto = photo.serverPhoto;
@@ -208,21 +239,28 @@ public class ListActivity extends Activity {
                 authorLine.addView(getLikeView(serverPhoto.getId(), serverPhoto.getLikesCount()));
                 if (serverPhoto.getUsername() != null)
                     authorLine.addView(getOverPrintStyle(serverPhoto.getUsername()));
-                view.addView(authorLine, getBottomLayoutParams(15));
+                view.addView(authorLine, getBottomLayoutParams(20));
 
-                final GridLayout.LayoutParams lp = new GridLayout.LayoutParams(GridLayout.spec(loaded), GridLayout.spec(0));
+                final LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
                 lp.setMargins(5, 5, 5, 5);
                 images.addView(view, lp);
 
-                ((TextView) findViewById(R.id.info)).setText("Loaded " + (++loaded) + "/" + ListActivity.this.photos.size());
+                loaded++;
+                ((ProgressBar) findViewById(R.id.progress)).setProgress(loaded * 100 / (loaded + photoToLoad.size()));
             }
         }
 
         @Override
-        protected Boolean doInBackgroundOrCrash(ServerPhoto[] photos) throws Exception {
-            for (ServerPhoto photo : photos) {
-                final Bitmap bitmap = BitmapFactory.decodeStream(server.getPhotoInputStream(photo.getId(), thumbnailSize));
-                publishProgress(new PhotoBitmap(bitmap, photo));
+        protected Boolean doInBackgroundOrCrash(Boolean[] photos) throws Exception {
+            while ((!photoToLoad.isEmpty()) && (!isCancelled())) {
+                ServerPhoto photo = photoToLoad.peek();
+                final byte[] bytes = ImageLoader.load(server.getPhoto(photo.getId(), thumbnailSize));
+                if (!isCancelled()) {
+                    if (photo == photoToLoad.poll()) {
+                        final Bitmap bitmap = BitmapFactory.decodeStream(new ByteArrayInputStream(bytes));
+                        publishProgress(new PhotoBitmap(bitmap, photo));
+                    }
+                }
             }
             return true;
         }
@@ -236,12 +274,12 @@ public class ListActivity extends Activity {
 
         @Override
         protected void onPostExecuteError(Exception error) {
-            displayError("Internal error: " + error);
+            displayError(getResources().getString(R.string.error_message, error.getMessage()));
         }
 
         @Override
         protected List<ServerPhoto> doInBackgroundOrCrash(Boolean[] params) throws Exception {
-            return server.getList(20, null);
+            return server.getList(BATCH_SIZE, null);
         }
     }
 
@@ -253,7 +291,7 @@ public class ListActivity extends Activity {
 
         @Override
         protected void onPostExecuteError(Exception error) {
-            displayError("Internal error: " + error);
+            displayError(getResources().getString(R.string.error_message, error.getMessage()));
         }
 
         @Override

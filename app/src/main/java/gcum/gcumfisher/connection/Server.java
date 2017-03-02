@@ -92,7 +92,7 @@ public class Server {
     }
 
     private InputStream query(@NonNull String servlet, Map<String, String> params, Part part) throws Exception {
-        HttpsURLConnection conn = getConnection(baseUrl+servlet);
+        HttpsURLConnection conn = getConnection(baseUrl + servlet);
         conn.setReadTimeout(10000);
         conn.setConnectTimeout(15000);
         conn.setRequestMethod("POST");
@@ -208,6 +208,32 @@ public class Server {
         return getServerPhotos(res.getJSONArray("photos"));
     }
 
+    public PhotoDetails getPhotoInfo(String id) throws Exception {
+        final Map<String, String> params = new HashMap<>();
+        params.put("id", id);
+        final JSONObject o = queryJson("getPhotoInfo", params);
+        if (!o.getString("result").equals("success"))
+            throw new Exception(o.getString("message"));
+        ServerPhoto.Address address = new ServerPhoto.Address(o.getString("street"), o.getInt("district"), o.getString("city"));
+        Point point = new Point(o.getLong("latitude"), o.getLong("longitude"));
+        ServerPhoto.CoordinatesSource coordinatesSource = ServerPhoto.CoordinatesSource.valueOf(o.getString("locationSource"));
+        ServerPhoto.Coordinates coordinates = new ServerPhoto.Coordinates(point, coordinatesSource);
+        ServerPhoto.Location location = new ServerPhoto.Location(address, coordinates);
+        final String time = o.getString("time");
+        final JSONArray likes = o.getJSONArray("likes");
+        final List<String> likesList = new ArrayList<>(likes.length());
+        for (int i = 0; i < likes.length(); i++) likesList.add(likes.getString(i));
+        return new PhotoDetails(
+                o.getString("date"),
+                "unknown".equals(time) ? null : time,
+                location,
+                o.getInt("width"),
+                o.getInt("height"),
+                o.optString("username", null),
+                likesList,
+                o.getBoolean("isLiked"));
+    }
+
     @NonNull
     private static List<ServerPhoto> getServerPhotos(JSONArray photos) throws JSONException {
         final List<ServerPhoto> list = new ArrayList<>(photos.length());
@@ -233,11 +259,18 @@ public class Server {
                 o.getBoolean("isLiked"));
     }
 
-    public InputStream getPhotoInputStream(String id, int maxSize) throws Exception {
+    public HttpURLConnection getPhoto(String id, int maxSize) throws Exception {
         HttpsURLConnection conn = getConnection(baseUrl + "getPhoto?id=" + id + "&maxSize=" + maxSize);
         conn.setDoInput(true);
         conn.connect();
-        return conn.getInputStream();
+        return conn;
+    }
+
+    public HttpURLConnection getPhoto(String id) throws Exception {
+        HttpsURLConnection conn = getConnection(baseUrl + "getPhoto?id=" + id);
+        conn.setDoInput(true);
+        conn.connect();
+        return conn;
     }
 
     @NonNull

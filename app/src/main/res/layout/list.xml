@@ -6,8 +6,9 @@
     android:orientation="vertical"
     tools:context="gcum.gcumfisher.ListActivity">
 
-    <TextView
-        android:id="@+id/info"
+    <ProgressBar
+        android:id="@+id/progress"
+        style="@android:style/Widget.ProgressBar.Horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
@@ -18,12 +19,12 @@
         android:fillViewport="true"
         android:padding="5dp">
 
-        <GridLayout
+        <LinearLayout
             android:id="@+id/images"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:background="@color/photosListBackground"/>
+            android:background="@color/photosListBackground"
+            android:orientation="vertical" />
 
     </ScrollView>
 </LinearLayout>

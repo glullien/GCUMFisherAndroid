@@ -42,7 +42,7 @@ public class ServerPhoto {
         }
     }
 
-    static class Location {
+    public static class Location {
         private final Address address;
         private final Coordinates coordinates;
 
@@ -51,6 +51,9 @@ public class ServerPhoto {
             this.coordinates = coordinates;
         }
 
+        public Address getAddress() {
+            return address;
+        }
     }
 
     enum CoordinatesSource {Street, Device}

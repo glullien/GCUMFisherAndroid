@@ -73,7 +73,7 @@ public class MapActivity extends Activity implements OnMapReadyCallback, GoogleM
 
         @Override
         protected void onPostExecuteError(Exception error) {
-            displayError("Internal error: " + error);
+            displayError(getResources().getString(R.string.error_message, error.getMessage()));
         }
 
         @Override
