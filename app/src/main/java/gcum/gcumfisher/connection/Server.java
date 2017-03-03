@@ -82,17 +82,20 @@ public class Server {
     }
 
     private JSONObject queryJson(String servlet, Map<String, String> params, Part part) throws Exception {
-        return new JSONObject(readStream(query(servlet, params, part)));
+        JSONObject res = new JSONObject(readStream(query(servlet, params, part)));
+        if (res.getString("result").equals("success")) return res;
+        else throw new ServerReturnedErrorException(res.getString("message"), res.optString("code", null));
     }
 
-    private HttpsURLConnection getConnection(@NonNull String url) throws Exception {
-        HttpsURLConnection conn = (HttpsURLConnection) new URL(url).openConnection();
-        conn.setSSLSocketFactory(SSL.getSSLSocketFactory(resources));
+    private HttpURLConnection getConnection(@NonNull String url) throws Exception {
+        HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
+        if (conn instanceof HttpsURLConnection)
+            ((HttpsURLConnection) conn).setSSLSocketFactory(SSL.getSSLSocketFactory(resources));
         return conn;
     }
 
     private InputStream query(@NonNull String servlet, Map<String, String> params, Part part) throws Exception {
-        HttpsURLConnection conn = getConnection(baseUrl + servlet);
+        HttpURLConnection conn = getConnection(baseUrl + servlet);
         conn.setReadTimeout(10000);
         conn.setConnectTimeout(15000);
         conn.setRequestMethod("POST");
@@ -138,16 +141,26 @@ public class Server {
     }
 
     public AutoLogin getAutoLogin(String username, String password) throws Exception {
+        return getAutoLogin(username, password, null, false);
+    }
+
+    public AutoLogin getAutoLogin(String username, String password, String email, boolean register) throws Exception {
         final Map<String, String> params = new HashMap<>();
         params.put("username", username);
         params.put("password", password);
+        params.put("email", email);
+        params.put("register", Boolean.toString(register));
         final JSONObject res = queryJson("getAutoLogin", params);
-        if (res.getString("result").equals("success"))
-            return new AutoLogin(res.getString("autoLogin"), res.getString("validTo"));
-        else throw new Exception(res.getString("message"));
+        return new AutoLogin(res.getString("autoLogin"), res.getString("validTo"));
     }
 
-    public void uploadAndReport(@NonNull final AutoLogin autoLogin, @NonNull final String street, final int district, @NonNull final long date, @Nullable Point point, @NonNull String path) throws Exception {
+    public void sendID(String email) throws Exception {
+        final Map<String, String> params = new HashMap<>();
+        params.put("email", email);
+        queryJson("sendID", params);
+    }
+
+    public void uploadAndReport(@NonNull final AutoLogin autoLogin, @NonNull final String street, final int district, final long date, @Nullable Point point, @NonNull String path) throws Exception {
         final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.FRANCE);
         dateFormat.setTimeZone(TimeZone.getTimeZone("Europe/Paris"));
         final Map<String, String> params = new HashMap<>();
@@ -161,9 +174,7 @@ public class Server {
         }
         final File file = new File(path);
         final FilePart part = new FilePart(file.getName(), file, "image/jpeg", "UTF-8");
-        JSONObject res = queryJson("uploadAndReport", params, part);
-        if (!res.getString("result").equals("success"))
-            throw new Exception(res.getString("message"));
+        queryJson("uploadAndReport", params, part);
     }
 
     public List<Point> getPoints() throws Exception {
@@ -173,8 +184,6 @@ public class Server {
         params.put("locationSources", "Street,Device");
         params.put("authors", "-All-");
         final JSONObject res = queryJson("getPoints", params);
-        if (!res.getString("result").equals("success"))
-            throw new Exception(res.getString("message"));
         final JSONArray photos = res.getJSONArray("photos");
         final List<Point> list = new ArrayList<>(photos.length());
         for (int i = 0; i < photos.length(); i++) {
@@ -190,8 +199,6 @@ public class Server {
         params.put("start", (start == null) ? "Latest" : start);
         params.put("number", Integer.toString(number));
         final JSONObject res = queryJson("getList", params);
-        if (!res.getString("result").equals("success"))
-            throw new Exception(res.getString("message"));
         return getServerPhotos(res.getJSONArray("photos"));
     }
 
@@ -203,8 +210,6 @@ public class Server {
         params.put("locationSources", "Street,Device");
         params.put("authors", "-All-");
         final JSONObject res = queryJson("getPointInfo", params);
-        if (!res.getString("result").equals("success"))
-            throw new Exception(res.getString("message"));
         return getServerPhotos(res.getJSONArray("photos"));
     }
 
@@ -212,8 +217,6 @@ public class Server {
         final Map<String, String> params = new HashMap<>();
         params.put("id", id);
         final JSONObject o = queryJson("getPhotoInfo", params);
-        if (!o.getString("result").equals("success"))
-            throw new Exception(o.getString("message"));
         ServerPhoto.Address address = new ServerPhoto.Address(o.getString("street"), o.getInt("district"), o.getString("city"));
         Point point = new Point(o.getLong("latitude"), o.getLong("longitude"));
         ServerPhoto.CoordinatesSource coordinatesSource = ServerPhoto.CoordinatesSource.valueOf(o.getString("locationSource"));
@@ -260,14 +263,14 @@ public class Server {
     }
 
     public HttpURLConnection getPhoto(String id, int maxSize) throws Exception {
-        HttpsURLConnection conn = getConnection(baseUrl + "getPhoto?id=" + id + "&maxSize=" + maxSize);
+        HttpURLConnection conn = getConnection(baseUrl + "getPhoto?id=" + id + "&maxSize=" + maxSize);
         conn.setDoInput(true);
         conn.connect();
         return conn;
     }
 
     public HttpURLConnection getPhoto(String id) throws Exception {
-        HttpsURLConnection conn = getConnection(baseUrl + "getPhoto?id=" + id);
+        HttpURLConnection conn = getConnection(baseUrl + "getPhoto?id=" + id);
         conn.setDoInput(true);
         conn.connect();
         return conn;
@@ -279,8 +282,6 @@ public class Server {
         params.put("pattern", pattern);
         params.put("nbAnswers", Integer.toString(nbAnswers));
         final JSONObject res = queryJson("searchAddress", params);
-        if (!res.getString("result").equals("success"))
-            throw new Exception(res.getString("message"));
         return getAddresses(res.getJSONArray("streets"));
     }
 
@@ -291,8 +292,6 @@ public class Server {
         params.put("longitude", Long.toString(point.getLongitude()));
         params.put("nb", Integer.toString(nb));
         final JSONObject res = queryJson("searchClosest", params);
-        if (!res.getString("result").equals("success"))
-            throw new Exception(res.getString("message"));
         return getAddresses(res.getJSONArray("streets"));
     }
 
@@ -311,8 +310,6 @@ public class Server {
         params.put("autoLogin", autoLogin.getCode());
         params.put("photoId", photoId);
         final JSONObject res = queryJson("toggleLike", params);
-        if (!res.getString("result").equals("success"))
-            throw new Exception(res.getString("message"));
         return new ToggleLikeResult(res.getInt("likesCount"), res.getBoolean("isLiked"));
     }
 }

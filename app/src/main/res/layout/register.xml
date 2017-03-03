@@ -8,7 +8,7 @@
     android:paddingLeft="5dp"
     android:paddingRight="5dp"
     android:paddingTop="5dp"
-    tools:context="gcum.gcumfisher.LoginActivity">
+    tools:context="gcum.gcumfisher.RegisterActivity">
 
     <LinearLayout
         android:id="@+id/controls"
@@ -62,50 +62,63 @@
                 android:layout_height="wrap_content"
                 android:inputType="textPassword"
                 android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/passwordCheckLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/passwordCheck"
+                android:textSize="17sp"
+                android:textStyle="bold" />
+
+            <EditText
+                android:id="@+id/passwordCheckInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textPassword"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/emailLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/email"
+                android:textSize="17sp"
+                android:textStyle="bold" />
+
+            <EditText
+                android:id="@+id/emailInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textEmailAddress"
+                android:textStyle="bold" />
+
         </LinearLayout>
     </LinearLayout>
 
 
-    <Button
-        android:id="@+id/login"
-        android:layout_width="match_parent"
+    <TextView
+        android:id="@+id/emailHelp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/controls"
-        android:onClick="login"
-        android:text="@string/login" />
+        android:text="@string/email_help"
+        android:textSize="17sp"
+        android:textStyle="bold" />
 
-    <GridLayout
-        android:id="@+id/buttons"
-        style="?android:attr/buttonBarStyle"
+    <Button
+        android:id="@+id/register"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/login"
-        android:orientation="horizontal">
-
-        <Button
-            android:id="@+id/register"
-            style="?android:attr/borderlessButtonStyle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="start"
-            android:onClick="register"
-            android:text="@string/register" />
-
-        <Button
-            android:id="@+id/forgot_email"
-            style="?android:attr/borderlessButtonStyle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="end"
-            android:onClick="forgot_email"
-            android:text="@string/forgot_email" />
-    </GridLayout>
+        android:layout_below="@id/emailHelp"
+        android:onClick="register"
+        android:text="@string/register" />
 
     <TextView
         android:id="@+id/status"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/buttons"
+        android:layout_below="@id/register"
         android:layout_marginEnd="25dp"
         android:layout_marginLeft="25dp"
         android:layout_marginRight="25dp"

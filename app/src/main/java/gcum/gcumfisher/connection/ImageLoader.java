@@ -18,13 +18,15 @@ public class ImageLoader {
         return load(connection, null);
     }
 
+    private static int BLOCK = 512;
+
     public static byte[] load(@NonNull HttpURLConnection connection, @Nullable Progress progress) throws IOException {
         final int length = connection.getContentLength();
         final byte[] bytes;
         if (length == -1) {
             final ByteArrayOutputStream boas = new ByteArrayOutputStream();
             final InputStream i = connection.getInputStream();
-            byte[] buffer = new byte[512];
+            byte[] buffer = new byte[BLOCK];
             try {
                 boolean eof = false;
                 while (!eof) {
@@ -43,7 +45,7 @@ public class ImageLoader {
             try {
                 int read = 0;
                 while (read < length) {
-                    int r = i.read(bytes, read, 512);
+                    int r = i.read(bytes, read, Math.min(BLOCK, length - read));
                     if (r < 0) throw new IOException("EOF reached");
                     read += r;
                     if (progress != null) progress.on(read * 100 / length);

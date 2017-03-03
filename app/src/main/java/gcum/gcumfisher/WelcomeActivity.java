@@ -48,6 +48,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 
+import gcum.gcumfisher.connection.AutoLogin;
 import gcum.gcumfisher.connection.Point;
 
 /**
@@ -717,9 +718,10 @@ public class WelcomeActivity extends Activity {
 
     public void displayInfo() {
         final StringBuilder message = new StringBuilder();
-        message.append("Version: 0.9\n");
-        message.append("Webdav");
-        message.append("\nBase url:\n").append(getString(R.string.base_url));
+        message.append("Version: ").append(BuildConfig.VERSION_NAME).append("\n");
+        message.append("\nBase url:\n").append(getString(R.string.base_url)).append("\n");
+        final AutoLogin autoLogin = LoginActivity.getAutoLogin(getApplicationContext());
+        if (autoLogin != null) message.append("\nConnecté:\n").append(autoLogin.getCode()).append("\n");
         new AlertDialog.Builder(this).setTitle("Info").setMessage(message).setIcon(android.R.drawable.ic_dialog_info).show();
     }
 }

@@ -34,11 +34,22 @@
     </plurals>
     <string name="username">Nom</string>
     <string name="password">Mot de passe</string>
+    <string name="passwordCheck">Mot de passe (confirmation)</string>
+    <string name="email">E-mail</string>
+    <string name="email_help">L\'adresse email n\'est pas obligatoire mais si vous perdez votre mot de passe, vous perdrez votre pseudo.</string>
     <string name="login">Se connecter</string>
+    <string name="register">S\'enregistrer</string>
+    <string name="username_already_used">Le pseudo est déjà utilisé</string>
+    <string name="send_password">Me renvoyer le mot de passe</string>
+    <string name="forgot_email">Oubli du mot de passe</string>
+    <string name="email_not_found">Cet email est inconnu</string>
+    <string name="email_sent">Un mail contenant vos identifiants vous a été envoyé</string>
     <string name="logout">Déconnecter</string>
     <string name="should_be_login">Vous devez être connecté</string>
     <string name="invalid_username">Le pseudo doit être constitué de 1 à 20 caractères alphanumériques ou de _</string>
     <string name="invalid_password">Le mot de passe doit être constitué de 6 à 20 caractères</string>
+    <string name="invalid_password_check">Le mot de passe de confirmation n\'est pas bon</string>
+    <string name="invalid_email">Le format de l\'email est incorrect</string>
     <string name="testing">Test de %s</string>
     <string name="request_both_location_permissions">La localisation géographique peut proposer la rue où vous êtes automatiquement</string>
     <string name="request_fine_location_permissions">La localisation fine par satellites peut proposer la rue où vous êtes automatiquement</string>

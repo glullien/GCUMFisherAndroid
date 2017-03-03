@@ -2,6 +2,7 @@ package gcum.gcumfisher;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -21,6 +22,10 @@ public class LoginActivity extends Activity {
     private static final String PREFERENCES = "gcum.gcumfisher.LOGIN_PREFERENCES";
     public static final String KEY_CODE = "autoLoginCode";
     public static final String KEY_VALID_TO = "autoLoginValidTo";
+
+    private static final int REGISTER_REQUEST = 1;
+    private static final int FORGOT_IDS_REQUEST = 2;
+
     private Server server;
 
     static class TestingResult {
@@ -43,11 +48,7 @@ public class LoginActivity extends Activity {
         @Override
         protected void onPostExecute(TestingResult res) {
             if (res.autoLogin != null) {
-                SharedPreferences sharedPref = getApplicationContext().getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE);
-                SharedPreferences.Editor editor = sharedPref.edit();
-                editor.putString(KEY_CODE, res.autoLogin.getCode());
-                editor.putString(KEY_VALID_TO, res.autoLogin.getValidTo());
-                editor.commit();
+                connect(getApplicationContext(), res.autoLogin);
                 setResult(LOGIN);
                 finish();
             } else {
@@ -75,6 +76,14 @@ public class LoginActivity extends Activity {
             this.username = username;
             this.password = password;
         }
+    }
+
+    static void connect(@NonNull Context context, @NonNull AutoLogin autoLogin) {
+        SharedPreferences sharedPref = context.getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putString(KEY_CODE, autoLogin.getCode());
+        editor.putString(KEY_VALID_TO, autoLogin.getValidTo());
+        editor.commit();
     }
 
     static void disconnect(@NonNull Context context) {
@@ -125,6 +134,28 @@ public class LoginActivity extends Activity {
     public void cancel(View view) {
         setResult(CANCELED);
         finish();
+    }
+
+    public void register(View view) {
+        startActivityForResult(new Intent(this, RegisterActivity.class), REGISTER_REQUEST);
+    }
+
+    public void forgot_email(View view) {
+        startActivityForResult(new Intent(this, ForgotEmailActivity.class), FORGOT_IDS_REQUEST);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            case REGISTER_REQUEST:
+                if (resultCode == RESULT_OK) {
+                    setResult(LOGIN);
+                    finish();
+                }
+                break;
+            case FORGOT_IDS_REQUEST:
+                break;
+        }
     }
 
 }

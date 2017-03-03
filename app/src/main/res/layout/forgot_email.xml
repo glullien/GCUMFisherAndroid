@@ -8,7 +8,7 @@
     android:paddingLeft="5dp"
     android:paddingRight="5dp"
     android:paddingTop="5dp"
-    tools:context="gcum.gcumfisher.LoginActivity">
+    tools:context="gcum.gcumfisher.ForgotEmailActivity">
 
     <LinearLayout
         android:id="@+id/controls"
@@ -34,78 +34,36 @@
             android:orientation="vertical">
 
             <TextView
-                android:id="@+id/usernameLabel"
+                android:id="@+id/emailLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/username"
+                android:text="@string/email"
                 android:textSize="17sp"
                 android:textStyle="bold" />
 
             <EditText
-                android:id="@+id/usernameInput"
+                android:id="@+id/emailInput"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="text"
+                android:inputType="textEmailAddress"
                 android:textStyle="bold" />
 
-            <TextView
-                android:id="@+id/passwordLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/password"
-                android:textSize="17sp"
-                android:textStyle="bold" />
-
-            <EditText
-                android:id="@+id/passwordInput"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="textPassword"
-                android:textStyle="bold" />
         </LinearLayout>
     </LinearLayout>
 
-
     <Button
-        android:id="@+id/login"
+        android:id="@+id/send_password"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/controls"
-        android:onClick="login"
-        android:text="@string/login" />
-
-    <GridLayout
-        android:id="@+id/buttons"
-        style="?android:attr/buttonBarStyle"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/login"
-        android:orientation="horizontal">
-
-        <Button
-            android:id="@+id/register"
-            style="?android:attr/borderlessButtonStyle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="start"
-            android:onClick="register"
-            android:text="@string/register" />
-
-        <Button
-            android:id="@+id/forgot_email"
-            style="?android:attr/borderlessButtonStyle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="end"
-            android:onClick="forgot_email"
-            android:text="@string/forgot_email" />
-    </GridLayout>
+        android:onClick="sendPassword"
+        android:text="@string/send_password" />
 
     <TextView
         android:id="@+id/status"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/buttons"
+        android:layout_below="@id/send_password"
         android:layout_marginEnd="25dp"
         android:layout_marginLeft="25dp"
         android:layout_marginRight="25dp"
