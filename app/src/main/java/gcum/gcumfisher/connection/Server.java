@@ -84,7 +84,8 @@ public class Server {
     private JSONObject queryJson(String servlet, Map<String, String> params, Part part) throws Exception {
         JSONObject res = new JSONObject(readStream(query(servlet, params, part)));
         if (res.getString("result").equals("success")) return res;
-        else throw new ServerReturnedErrorException(res.getString("message"), res.optString("code", null));
+        else
+            throw new ServerReturnedErrorException(res.getString("message"), res.optString("code", null));
     }
 
     private HttpURLConnection getConnection(@NonNull String url) throws Exception {
@@ -120,7 +121,7 @@ public class Server {
         } else {
             final List<Part> parts = new LinkedList<>();
             for (Map.Entry<String, String> e : params.entrySet())
-                parts.add(new StringPart(e.getKey(), e.getValue()));
+                parts.add(new StringPart(e.getKey(), e.getValue(), "UTF-8"));
             parts.add(part);
             final MultipartEntity multipart = new MultipartEntity(parts.toArray(new Part[parts.size()]));
             multipart.setContentEncoding("UTF-8");
@@ -148,7 +149,7 @@ public class Server {
         final Map<String, String> params = new HashMap<>();
         params.put("username", username);
         params.put("password", password);
-        params.put("email", email);
+        if (email != null) params.put("email", email);
         params.put("register", Boolean.toString(register));
         final JSONObject res = queryJson("getAutoLogin", params);
         return new AutoLogin(res.getString("autoLogin"), res.getString("validTo"));
@@ -163,11 +164,16 @@ public class Server {
     public void uploadAndReport(@NonNull final AutoLogin autoLogin, @NonNull final String street, final int district, final long date, @Nullable Point point, @NonNull String path) throws Exception {
         final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.FRANCE);
         dateFormat.setTimeZone(TimeZone.getTimeZone("Europe/Paris"));
+        final SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss", Locale.FRANCE);
+        timeFormat.setTimeZone(TimeZone.getTimeZone("Europe/Paris"));
+
         final Map<String, String> params = new HashMap<>();
         params.put("autoLogin", autoLogin.getCode());
         params.put("street", street);
         params.put("district", Integer.toString(district));
-        params.put("date", dateFormat.format(new Date(date)));
+        final Date d = new Date(date);
+        params.put("date", dateFormat.format(d));
+        params.put("time", timeFormat.format(d));
         if (point != null) {
             params.put("latitude", Long.toString(point.getLatitude()));
             params.put("longitude", Long.toString(point.getLongitude()));

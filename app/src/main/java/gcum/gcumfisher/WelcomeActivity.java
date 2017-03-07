@@ -66,6 +66,7 @@ public class WelcomeActivity extends Activity {
 
     public static final String SAVED_PHOTOS = "gcum.gcumfisher.WelcomeActivity.PHOTOS";
     public static final String SAVED_NEXT_PHOTO = "gcum.gcumfisher.WelcomeActivity.NEXT_PHOTO";
+    public static final int MAX_QUICK_LOCATIONS = 4;
 
     /**
      * List of photos waiting to be sent
@@ -80,10 +81,10 @@ public class WelcomeActivity extends Activity {
     private Photo nextPhoto;
 
     /**
-     * The current spot found by the GPS
+     * The current spots found by the GPS
      */
     @Nullable
-    private Spot gpsAddress;
+    private List<Spot> gpsAddress;
 
     /**
      * The spot forced by the user with the SetLocationActity
@@ -97,6 +98,9 @@ public class WelcomeActivity extends Activity {
      */
     @Nullable
     private Location location;
+
+    @Nullable
+    private LocationSolver locationSolver;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -115,6 +119,16 @@ public class WelcomeActivity extends Activity {
         restoreSendReportReceiver();
         updatePhotosCount();
         updateSendButton();
+
+        getStreetTextView().setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if ((gpsAddress != null) && (gpsAddress.size() > 1)) {
+                    gpsAddress.add(gpsAddress.remove(0));
+                    updateLocation();
+                }
+            }
+        });
 
         // Small cheat to view what cloud is being used
         findViewById(R.id.title).setOnLongClickListener(new View.OnLongClickListener() {
@@ -203,7 +217,7 @@ public class WelcomeActivity extends Activity {
     }
 
     private void startLocationSolver() {
-        LocationSolver.startTracking(this, new LocationSolver.Listener() {
+        locationSolver = LocationSolver.startTracking(this, new LocationSolver.Listener() {
             @Override
             public void displayError(@NonNull CharSequence message) {
                 // WelcomeActivity.this.displayError(message);
@@ -228,10 +242,33 @@ public class WelcomeActivity extends Activity {
              */
             @Override
             public void setLocationResults(@NonNull List<Spot> addresses) {
-                gpsAddress = addresses.isEmpty() ? null : addresses.get(0);
-                updateLocation();
+                if (addresses.isEmpty() && (gpsAddress != null)) {
+                    gpsAddress = null;
+                    updateLocation();
+                } else if ((gpsAddress == null) || !sameAddresses(gpsAddress, addresses)) {
+                    gpsAddress = addresses.isEmpty() ? null : addresses;
+                    updateLocation();
+                }
             }
-        }, 1);
+
+            private boolean sameAddresses(@NonNull List<Spot> addresses1, @NonNull List<Spot> addresses2) {
+                if (addresses1.size() != addresses2.size()) return false;
+                for (Spot spot : addresses2) if (addresses1.contains(spot)) return false;
+                return true;
+            }
+        }, MAX_QUICK_LOCATIONS);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (locationSolver != null) locationSolver.start();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (locationSolver != null) locationSolver.stop();
     }
 
     private void updateLoginButton() {
@@ -592,7 +629,7 @@ public class WelcomeActivity extends Activity {
      */
     private SendReportReceiver sendReportReceiver;
 
-    static class SendReportReceiver extends ResultReceiver {
+    private static class SendReportReceiver extends ResultReceiver {
         SendReportReceiver(Handler handler, @NonNull WelcomeActivity initialActivity) {
             super(handler);
             this.activity = initialActivity;
@@ -681,7 +718,7 @@ public class WelcomeActivity extends Activity {
      */
     @Nullable
     private Spot getAddress() {
-        return (forcedAddress != null) ? forcedAddress : gpsAddress;
+        return (forcedAddress != null) ? forcedAddress : (gpsAddress != null ? gpsAddress.get(0) : null);
     }
 
     /**
@@ -721,7 +758,8 @@ public class WelcomeActivity extends Activity {
         message.append("Version: ").append(BuildConfig.VERSION_NAME).append("\n");
         message.append("\nBase url:\n").append(getString(R.string.base_url)).append("\n");
         final AutoLogin autoLogin = LoginActivity.getAutoLogin(getApplicationContext());
-        if (autoLogin != null) message.append("\nConnecté:\n").append(autoLogin.getCode()).append("\n");
+        if (autoLogin != null)
+            message.append("\nConnecté:\n").append(autoLogin.getCode()).append("\n");
         new AlertDialog.Builder(this).setTitle("Info").setMessage(message).setIcon(android.R.drawable.ic_dialog_info).show();
     }
 }

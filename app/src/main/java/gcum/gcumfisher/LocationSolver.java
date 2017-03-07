@@ -12,6 +12,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -26,6 +27,9 @@ import gcum.gcumfisher.util.AsyncTaskE;
 class LocationSolver {
 
     private final Server server;
+
+    private final LocationManager locationManager;
+    private boolean started;
 
     interface Listener {
         void displayError(@NonNull CharSequence message);
@@ -46,9 +50,10 @@ class LocationSolver {
         this.listener = listener;
         this.maxResults = maxResults;
         server = new Server(activity.getResources());
+        locationManager = (LocationManager) activity.getSystemService(Context.LOCATION_SERVICE);
     }
 
-    private class QueryStreet extends AsyncTaskE<Location, Boolean, Spot> {
+    private class QueryStreet extends AsyncTaskE<Location, Boolean, List<Spot>> {
         @Override
         protected void onPostExecuteError(Exception error) {
             error.printStackTrace();
@@ -56,16 +61,19 @@ class LocationSolver {
         }
 
         @Override
-        protected void onPostExecuteSuccess(Spot spot) {
-            listener.setLocationResults(Collections.singletonList(spot));
+        protected void onPostExecuteSuccess(List<Spot> spots) {
+            listener.setLocationResults(spots);
         }
 
         @Override
-        protected Spot doInBackgroundOrCrash(Location[] params) throws Exception {
+        protected List<Spot> doInBackgroundOrCrash(Location[] params) throws Exception {
             if ((params == null) || (params.length == 0)) throw new Exception("missing location");
-            final List<ServerPhoto.Address> addresses= server.searchClosest(new Point(params[0]), 1);
+            final List<ServerPhoto.Address> addresses = server.searchClosest(new Point(params[0]), maxResults);
             if (addresses.size() == 0) throw new Exception("missing addresses");
-            return new Spot(addresses.get(0).getStreet(), addresses.get(0).getDistrict());
+            final List<Spot> spots = new ArrayList<>(addresses.size());
+            for (ServerPhoto.Address address : addresses)
+                spots.add(new Spot(address.getStreet(), address.getDistrict()));
+            return spots;
         }
     }
 
@@ -93,8 +101,8 @@ class LocationSolver {
         }
     };
 
-    private void trackCurrentLocation() {
-        LocationManager locationManager = (LocationManager) activity.getSystemService(Context.LOCATION_SERVICE);
+    void start() {
+        if (started) return;
         boolean fineLocationRefused = ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED;
         boolean coarseLocationRefused = ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED;
         if (fineLocationRefused && coarseLocationRefused) {
@@ -111,9 +119,18 @@ class LocationSolver {
         listener.setLocationProgressMessage(activity.getText(R.string.gps_calling));
         locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 10000, 10, locationListener);
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 10000, 10, locationListener);
+        started = true;
     }
 
-    static void startTracking(Activity activity, Listener listener, int maxResults) {
-        new LocationSolver(activity, listener, maxResults).trackCurrentLocation();
+    void stop() {
+        if (!started) return;
+        locationManager.removeUpdates(locationListener);
+        started = false;
+    }
+
+    static LocationSolver startTracking(Activity activity, Listener listener, int maxResults) {
+        final LocationSolver solver = new LocationSolver(activity, listener, maxResults);
+        solver.start();
+        return solver;
     }
 }
