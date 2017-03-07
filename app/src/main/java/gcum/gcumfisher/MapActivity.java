@@ -22,10 +22,11 @@ import gcum.gcumfisher.connection.Point;
 import gcum.gcumfisher.connection.Server;
 import gcum.gcumfisher.util.AsyncTaskE;
 
-public class MapActivity extends Activity implements OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
+public class MapActivity extends Activity implements OnMapReadyCallback, GoogleMap.OnCameraIdleListener, GoogleMap.OnMarkerClickListener {
 
     private static final int SHOW_LIST = 1;
     private Server server;
+    private GoogleMap map;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -39,10 +40,17 @@ public class MapActivity extends Activity implements OnMapReadyCallback, GoogleM
 
     @Override
     public void onMapReady(GoogleMap map) {
+        this.map = map;
+        map.setOnMarkerClickListener(this);
+        map.setOnCameraIdleListener(this);
+        new GetPoints(map).execute();
+    }
+
+    @Override
+    public void onCameraIdle() {
         LatLngBounds bounds = new LatLngBounds(new LatLng(48.819117, 2.248415), new LatLng(48.902543, 2.439249));
         map.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, 0));
-        map.setOnMarkerClickListener(this);
-        new GetPoints(map).execute();
+        map.setOnCameraIdleListener(null);
     }
 
     @Override
