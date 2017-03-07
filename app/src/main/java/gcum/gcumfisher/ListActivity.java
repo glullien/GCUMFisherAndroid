@@ -40,6 +40,7 @@ public class ListActivity extends Activity {
     static final String LATITUDE = "LATITUDE";
     static final String LONGITUDE = "LONGITUDE";
     public static final int BATCH_SIZE = 20;
+    private float imageLoadRatio = 2;
     private Server server;
 
     @Override
@@ -80,7 +81,7 @@ public class ListActivity extends Activity {
 
     @Override
     protected void onStart() {
-        super.onResume();
+        super.onStart();
         if (!photoToLoad.isEmpty()) {
             getPhotosTask = new GetPhotos();
             getPhotosTask.execute();
@@ -129,7 +130,7 @@ public class ListActivity extends Activity {
         }
     }
 
-    class ToggleLike extends AsyncTaskE<Boolean, Boolean, ToggleLikeResult> {
+    private class ToggleLike extends AsyncTaskE<Boolean, Boolean, ToggleLikeResult> {
         private final AutoLogin autoLogin;
         private final String photoId;
         private final TextView likesCount;
@@ -163,7 +164,7 @@ public class ListActivity extends Activity {
         }
     }
 
-    class GetPhotos extends AsyncTaskE<Boolean, PhotoBitmap, Boolean> {
+    private class GetPhotos extends AsyncTaskE<Boolean, PhotoBitmap, Boolean> {
         private final int thumbnailSize;
         private int loaded;
 
@@ -218,7 +219,14 @@ public class ListActivity extends Activity {
             for (final PhotoBitmap photo : photos) {
                 final RelativeLayout view = new RelativeLayout(ListActivity.this);
                 final ImageView imageView = new ImageView(ListActivity.this);
-                imageView.setImageBitmap(photo.bitmap);
+                final Bitmap viewBitmap;
+                if (imageLoadRatio == 1) viewBitmap = photo.bitmap;
+                else {
+                    final int width = Math.round(photo.bitmap.getWidth() * imageLoadRatio);
+                    final int height = Math.round(photo.bitmap.getHeight() * imageLoadRatio);
+                    viewBitmap = Bitmap.createScaledBitmap(photo.bitmap, width, height, true);
+                }
+                imageView.setImageBitmap(viewBitmap);
                 imageView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -260,7 +268,7 @@ public class ListActivity extends Activity {
         protected Boolean doInBackgroundOrCrash(Boolean[] photos) throws Exception {
             while ((!photoToLoad.isEmpty()) && (!isCancelled())) {
                 ServerPhoto photo = photoToLoad.peek();
-                final byte[] bytes = ImageLoader.load(server.getPhoto(photo.getId(), thumbnailSize));
+                final byte[] bytes = ImageLoader.load(server.getPhoto(photo.getId(), Math.round(thumbnailSize / imageLoadRatio)));
                 if (!isCancelled()) {
                     if (photo == photoToLoad.poll()) {
                         final Bitmap bitmap = BitmapFactory.decodeStream(new ByteArrayInputStream(bytes));
@@ -272,7 +280,7 @@ public class ListActivity extends Activity {
         }
     }
 
-    class GetList extends AsyncTaskE<Boolean, Boolean, List<ServerPhoto>> {
+    private class GetList extends AsyncTaskE<Boolean, Boolean, List<ServerPhoto>> {
         @Override
         protected void onPostExecuteSuccess(List<ServerPhoto> photos) {
             if (photos != null) showPhotos(photos);
@@ -289,7 +297,7 @@ public class ListActivity extends Activity {
         }
     }
 
-    class GetPointInfo extends AsyncTaskE<Point, Boolean, List<ServerPhoto>> {
+    private class GetPointInfo extends AsyncTaskE<Point, Boolean, List<ServerPhoto>> {
         @Override
         protected void onPostExecuteSuccess(List<ServerPhoto> photos) {
             if (photos != null) showPhotos(photos);
