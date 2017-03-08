@@ -44,7 +44,7 @@ public class Server {
     @NonNull
     private final String baseUrl;
 
-    public Server(Resources resources) {
+    public Server(@NonNull Resources resources) {
         baseUrl = resources.getString(R.string.base_url);
         this.resources = resources;
     }
@@ -138,7 +138,7 @@ public class Server {
         final int code = conn.getResponseCode();
         if (code == HttpURLConnection.HTTP_OK) return conn.getInputStream();
 
-        throw new IOException("Http error " + code);
+        throw new HttpErrorCodeException(code);
     }
 
     public AutoLogin getAutoLogin(String username, String password) throws Exception {
