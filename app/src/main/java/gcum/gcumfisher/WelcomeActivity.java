@@ -171,7 +171,13 @@ public class WelcomeActivity extends Activity {
                 startActivityForResult(new Intent(this, PreferencesActivity.class), PREFERENCES_REQUEST);
                 return true;
             case R.id.map:
-                startActivity(new Intent(this, MapActivity.class));
+                final Intent mapIntent = new Intent(this, MapActivity.class);
+                final Location location = this.location;
+                if (location != null) {
+                    mapIntent.putExtra(MapActivity.LATITUDE, location.getLatitude());
+                    mapIntent.putExtra(MapActivity.LONGITUDE, location.getLongitude());
+                }
+                startActivity(mapIntent);
                 return true;
             case R.id.list:
                 final Intent intent = new Intent(this, ListActivity.class);

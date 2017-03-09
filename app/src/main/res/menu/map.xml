@@ -5,4 +5,9 @@
         android:icon="@android:drawable/ic_menu_mylocation"
         android:showAsAction="ifRoom"
         android:title="@string/close_to_me" />
+    <item
+        android:id="@+id/paris"
+        android:icon="@android:drawable/ic_menu_mapmode"
+        android:showAsAction="ifRoom"
+        android:title="@string/paris" />
 </menu>
