@@ -41,7 +41,7 @@ public class SetLocationActivity extends Activity {
     private List<Spot> closestSpots = null;
     private Server server;
 
-    class QueryServerAddress extends AsyncTaskE<String, Boolean, List<Spot>> {
+    private class QueryServerAddress extends AsyncTaskE<String, Boolean, List<Spot>> {
         @Override
         protected void onPreExecute() {
             ProgressBar wheel = (ProgressBar) findViewById(R.id.search_street_progress);
@@ -75,22 +75,13 @@ public class SetLocationActivity extends Activity {
     }
 
     /**
-     * Ajoute des adresses possible à la page
+     * Ajoute des adresses possibles à la page
      */
     private void addSpots(@NonNull List<Spot> spots) {
         for (final Spot spot : spots)
             if ((spot != null) && !this.spots.contains(spot)) this.spots.add(spot);
         updatePossibleSpots();
     }
-
-    /**
-     * Ajoute une nouvelle adresse possible à la page
-     */
-    private void addSpot(@NonNull Spot spot) {
-        if (!spots.contains(spot)) spots.add(spot);
-        updatePossibleSpots();
-    }
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
