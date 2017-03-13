@@ -30,8 +30,8 @@ import gcum.gcumfisher.util.AsyncTaskE;
 public class MapActivity extends Activity implements OnMapReadyCallback, GoogleMap.OnCameraIdleListener, GoogleMap.OnMarkerClickListener {
 
 
-    public static final String LATITUDE = "gcum.gcumfisher.SetLocationActivity.LATITUDE";
-    public static final String LONGITUDE = "gcum.gcumfisher.SetLocationActivity.LONGITUDE";
+    public static final String LATITUDE = "gcum.gcumfisher.MapActivity.LATITUDE";
+    public static final String LONGITUDE = "gcum.gcumfisher.MapActivity.LONGITUDE";
 
     private static final int SHOW_LIST = 1;
     private Server server;
@@ -48,9 +48,12 @@ public class MapActivity extends Activity implements OnMapReadyCallback, GoogleM
         server = new Server(getResources());
 
         final Intent intent = getIntent();
-        final double latitude = intent.getDoubleExtra(LATITUDE, Double.NaN);
-        final double longitude = intent.getDoubleExtra(LONGITUDE, Double.NaN);
-        here = (Double.isNaN(latitude) || Double.isNaN(longitude)) ? null : new Point(latitude, longitude);
+        if (intent == null) here = null;
+        else {
+            final double latitude = intent.getDoubleExtra(LATITUDE, Double.NaN);
+            final double longitude = intent.getDoubleExtra(LONGITUDE, Double.NaN);
+            here = (Double.isNaN(latitude) || Double.isNaN(longitude)) ? null : new Point(latitude, longitude);
+        }
     }
 
     @Override
