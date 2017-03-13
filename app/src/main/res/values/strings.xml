@@ -1,6 +1,6 @@
 <resources>
-    <string name="app_name">GCUM Fisher</string>
-    <string name="gcum_spotted">Vous avez vu un GCUM ?</string>
+    <string name="app_name">Paris est un parking</string>
+    <string name="gcum_spotted">Vous avez vu un véhicule trop mal garé ?</string>
     <string name="take_photo">Prenez une photo</string>
     <string name="use_photo">Utilisez la galerie</string>
     <string name="erase_photos">Effacez les images</string>
@@ -63,7 +63,9 @@
     <string name="images_quality_result">%d%%</string>
     <string name="map">Carte</string>
     <string name="list">Liste</string>
+    <string name="by_date">Par date</string>
     <string name="close_to_me">Près de moi</string>
     <string name="details">Détails</string>
     <string name="paris">Paris</string>
+    <string name="distance">%d m</string>
 </resources>

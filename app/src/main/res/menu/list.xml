@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/closest"
+        android:icon="@android:drawable/ic_menu_mylocation"
+        android:showAsAction="ifRoom"
+        android:title="@string/close_to_me" />
+    <item
+        android:id="@+id/by_date"
+        android:icon="@android:drawable/ic_menu_my_calendar"
+        android:showAsAction="ifRoom"
+        android:title="@string/by_date" />
+</menu>
