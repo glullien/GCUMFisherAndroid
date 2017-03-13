@@ -9,9 +9,8 @@
     <color name="fadeBlue">#376aff</color>
     <color name="transparentBlack">#9FFF</color>
 
-    <color name="overPrint">@color/white</color>
+    <color name="overPrint">@color/black</color>
     <color name="overPrintLiked">@color/red</color>
-    <color name="overPrintShadow">@color/blackShadow</color>
 
     <color name="removeBackground">@color/red</color>
     <color name="cancelBackground">@color/fadeBlue</color>

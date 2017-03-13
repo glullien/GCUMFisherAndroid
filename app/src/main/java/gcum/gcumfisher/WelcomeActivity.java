@@ -522,6 +522,7 @@ public class WelcomeActivity extends Activity {
     @NonNull
     private TextView getAgeView(int age) {
         final TextView ageView = new TextView(this);
+        ageView.setBackgroundResource(R.color.overPrintPanel);
         ageView.setText(getResources().getQuantityString(R.plurals.age, age, age));
         ageView.setTextAppearance(this, R.style.OverPrint);
         ageView.setGravity(Gravity.CENTER_HORIZONTAL);
