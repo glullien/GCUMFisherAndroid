@@ -1,6 +1,7 @@
 package gcum.gcumfisher.connection;
 
 import android.content.res.Resources;
+import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -21,6 +22,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -36,8 +38,10 @@ import java.util.TimeZone;
 
 import javax.net.ssl.HttpsURLConnection;
 
+import gcum.gcumfisher.BuildConfig;
 import gcum.gcumfisher.R;
 
+@SuppressWarnings("StringConcatenation")
 public class Server {
     @NonNull
     private final Resources resources;
@@ -82,7 +86,10 @@ public class Server {
     }
 
     private JSONObject queryJson(String servlet, Map<String, String> params, Part part) throws Exception {
-        JSONObject res = new JSONObject(readStream(query(servlet, params, part)));
+        final Map<String, String> stdParams = new HashMap<>();
+        stdParams.put("device", "android " + android.os.Build.VERSION.RELEASE + " app " + BuildConfig.VERSION_NAME);
+        stdParams.putAll(params);
+        JSONObject res = new JSONObject(readStream(query(servlet, stdParams, part)));
         if (res.getString("result").equals("success")) return res;
         else
             throw new ServerReturnedErrorException(res.getString("message"), res.optString("code", null));
@@ -199,9 +206,16 @@ public class Server {
         return list;
     }
 
-    public List<ServerPhoto> getList(int number, @Nullable String start) throws Exception {
+    public enum Sort {date, closest}
+
+    public List<ServerPhoto> getList(int number, @NonNull Sort sort, @Nullable Point point, @Nullable String start) throws Exception {
         final Map<String, String> params = new HashMap<>();
         params.put("district", "All");
+        params.put("sort", sort.toString());
+        if (point != null) {
+            params.put("latitude", Long.toString(point.getLatitude()));
+            params.put("longitude", Long.toString(point.getLongitude()));
+        }
         params.put("start", (start == null) ? "Latest" : start);
         params.put("number", Integer.toString(number));
         final JSONObject res = queryJson("getList", params);
@@ -317,5 +331,73 @@ public class Server {
         params.put("photoId", photoId);
         final JSONObject res = queryJson("toggleLike", params);
         return new ToggleLikeResult(res.getInt("likesCount"), res.getBoolean("isLiked"));
+    }
+
+    private void log(@Nullable final AutoLogin autoLogin, @NonNull final String message, @Nullable final Exception exception) throws Exception {
+        final Map<String, String> params = new HashMap<>();
+        if (autoLogin != null) params.put("autoLogin", autoLogin.getCode());
+        params.put("message", message);
+        if (exception != null) {
+            final StringWriter out = new StringWriter();
+            PrintWriter w = new PrintWriter(out);
+            w.println("Exception " + exception.getMessage());
+            exception.printStackTrace(w);
+            w.close();
+            final String stackTrace = out.toString();
+            final StringBuilder toSent = new StringBuilder();
+            for (int i = 0; i < stackTrace.length(); i++) {
+                char c = stackTrace.charAt(i);
+                switch (c) {
+                    case '\n':
+                        toSent.append('\\');
+                        break;
+                    case '\t':
+                        toSent.append(' ');
+                        break;
+                    default:
+                        int code = (int) c;
+                        if ((code >= 32) && (code < 127)) toSent.append(c);
+                        else toSent.append('?');
+                }
+            }
+            params.put("exception", toSent.toString());
+        }
+        queryJson("log", params);
+    }
+
+    private static class ReportTaskParam {
+        @Nullable
+        private final AutoLogin autoLogin;
+        @NonNull
+        private final String message;
+        @Nullable
+        private final Exception exception;
+
+        ReportTaskParam(@Nullable final AutoLogin autoLogin, @NonNull String message, @Nullable Exception exception) {
+            this.autoLogin = autoLogin;
+            this.message = message;
+            this.exception = exception;
+        }
+    }
+
+    private class LogTask extends AsyncTask<ReportTaskParam, Boolean, Boolean> {
+        @Override
+        protected Boolean doInBackground(ReportTaskParam... params) {
+            try {
+                log(params[0].autoLogin, params[0].message, params[0].exception);
+                return true;
+            } catch (Exception e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
+    }
+
+    public void startLog(@Nullable final AutoLogin autoLogin, @NonNull String message) {
+        startLog(autoLogin, message, null);
+    }
+
+    public void startLog(@Nullable final AutoLogin autoLogin, @NonNull String message, @Nullable final Exception e) {
+        new LogTask().execute(new ReportTaskParam(autoLogin, message, e));
     }
 }

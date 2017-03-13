@@ -12,6 +12,8 @@ import android.support.annotation.Nullable;
 import android.support.annotation.Px;
 import android.support.annotation.StyleRes;
 import android.view.Gravity;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -34,14 +36,18 @@ import gcum.gcumfisher.connection.ToggleLikeResult;
 import gcum.gcumfisher.util.AsyncTaskE;
 
 public class ListActivity extends Activity {
-    static final String TYPE = "TYPE";
+    static final String TYPE = "gcum.gcumfisher.ListActivity.TYPE";
     static final int FOR_ONE_POINT = 1;
     static final int ALL = 2;
-    static final String LATITUDE = "LATITUDE";
-    static final String LONGITUDE = "LONGITUDE";
+    public static final String LATITUDE = "gcum.gcumfisher.ListActivity.LATITUDE";
+    public static final String LONGITUDE = "gcum.gcumfisher.ListActivity.LONGITUDE";
+    public static final String HERE_LATITUDE = "gcum.gcumfisher.ListActivity.HERE_LATITUDE";
+    public static final String HERE_LONGITUDE = "gcum.gcumfisher.ListActivity.HERE_LONGITUDE";
     public static final int BATCH_SIZE = 20;
     private float imageLoadRatio = 2;
     private Server server;
+    private Point here;
+    private Server.Sort sort = Server.Sort.date;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -49,16 +55,55 @@ public class ListActivity extends Activity {
         setContentView(R.layout.list);
 
         Intent intent = getIntent();
-        if (intent != null) switch (intent.getIntExtra(TYPE, -1)) {
-            case ALL:
-                new GetList().execute();
-                break;
-            case FOR_ONE_POINT:
-                Point point = new Point(intent.getLongExtra(LATITUDE, 0), intent.getLongExtra(LONGITUDE, 0));
-                new GetPointInfo().execute(point);
-                break;
+        if (intent == null) here = null;
+        else {
+            switch (intent.getIntExtra(TYPE, -1)) {
+                case ALL:
+                    new GetList().execute();
+                    break;
+                case FOR_ONE_POINT:
+                    Point point = new Point(intent.getLongExtra(LATITUDE, 0), intent.getLongExtra(LONGITUDE, 0));
+                    new GetPointInfo().execute(point);
+                    break;
+            }
+
+            final double latitude = intent.getDoubleExtra(HERE_LATITUDE, Double.NaN);
+            final double longitude = intent.getDoubleExtra(HERE_LONGITUDE, Double.NaN);
+            here = (Double.isNaN(latitude) || Double.isNaN(longitude)) ? null : new Point(latitude, longitude);
         }
         server = new Server(getResources());
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        if (here == null) return false;
+        else {
+            getMenuInflater().inflate(R.menu.list, menu);
+            return true;
+        }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.closest:
+                sort = Server.Sort.closest;
+                refreshList();
+                return true;
+            case R.id.by_date:
+                sort = Server.Sort.date;
+                refreshList();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    private void refreshList() {
+        if (getPhotosTask != null) getPhotosTask.cancel(false);
+        ((ViewGroup) findViewById(R.id.images)).removeAllViews();
+        photoToLoad.clear();
+        new GetList().execute();
     }
 
     private final Queue<ServerPhoto> photoToLoad = new ConcurrentLinkedQueue<>();
@@ -155,6 +200,8 @@ public class ListActivity extends Activity {
 
         @Override
         protected void onPostExecuteError(Exception error) {
+            server.startLog(autoLogin, "Switching like", error);
+            error.printStackTrace();
             displayError(getResources().getString(R.string.error_message, error.getMessage()));
         }
 
@@ -175,6 +222,7 @@ public class ListActivity extends Activity {
 
         @Override
         protected void onPostExecuteError(Exception error) {
+            server.startLog(null, "Downloading photos", error);
             error.printStackTrace();
             displayError(getResources().getString(R.string.error_message, error.getMessage()));
         }
@@ -244,6 +292,13 @@ public class ListActivity extends Activity {
                 topLines.setBackgroundResource(R.color.overPrintPanel);
                 topLines.addView(getOverPrintStyle(serverPhoto.getDateTime(getResources())));
                 topLines.addView(getStyled(serverPhoto.getAddress(getResources()), R.style.OverPrintSmall));
+
+                final ServerPhoto.Coordinates coordinates = serverPhoto.getLocation().getCoordinates();
+                if ((coordinates.getSource() == ServerPhoto.CoordinatesSource.Device) && (here != null)) {
+                    long distance = Math.round(here.distance(coordinates.getPoint()));
+                    topLines.addView(getStyled(getResources().getString(R.string.distance, distance), R.style.OverPrintSmall));
+                }
+
                 view.addView(topLines, getTopLayoutParams(10));
 
                 final LinearLayout authorLine = new LinearLayout(ListActivity.this);
@@ -288,12 +343,14 @@ public class ListActivity extends Activity {
 
         @Override
         protected void onPostExecuteError(Exception error) {
+            server.startLog(null, "Downloading list", error);
+            error.printStackTrace();
             displayError(getResources().getString(R.string.error_message, error.getMessage()));
         }
 
         @Override
         protected List<ServerPhoto> doInBackgroundOrCrash(Boolean[] params) throws Exception {
-            return server.getList(BATCH_SIZE, null);
+            return server.getList(BATCH_SIZE, sort, here, null);
         }
     }
 
@@ -305,6 +362,8 @@ public class ListActivity extends Activity {
 
         @Override
         protected void onPostExecuteError(Exception error) {
+            server.startLog(null, "Downloading point info", error);
+            error.printStackTrace();
             displayError(getResources().getString(R.string.error_message, error.getMessage()));
         }
 

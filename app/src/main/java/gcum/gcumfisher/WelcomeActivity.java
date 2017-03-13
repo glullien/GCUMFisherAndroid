@@ -50,6 +50,7 @@ import java.util.Locale;
 
 import gcum.gcumfisher.connection.AutoLogin;
 import gcum.gcumfisher.connection.Point;
+import gcum.gcumfisher.connection.Server;
 
 /**
  * Main page
@@ -102,10 +103,13 @@ public class WelcomeActivity extends Activity {
     @Nullable
     private LocationSolver locationSolver;
 
+    private Server server;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.welcome);
+        server = new Server(getResources());
         if (savedInstanceState != null) {
             // Restore content after orientation switched
             final List<String> savedPhotos = savedInstanceState.getStringArrayList(SAVED_PHOTOS);
@@ -155,6 +159,8 @@ public class WelcomeActivity extends Activity {
                 displayLocationPermissionInfo(R.string.request_coarse_location_permissions);
             else requestLocationPermissions();
         } else startLocationSolver();
+
+        server.startLog(null, "Opening welcome activity");
     }
 
     @Override
@@ -166,13 +172,13 @@ public class WelcomeActivity extends Activity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        final Location location = this.location;
         switch (item.getItemId()) {
             case R.id.preferences:
                 startActivityForResult(new Intent(this, PreferencesActivity.class), PREFERENCES_REQUEST);
                 return true;
             case R.id.map:
                 final Intent mapIntent = new Intent(this, MapActivity.class);
-                final Location location = this.location;
                 if (location != null) {
                     mapIntent.putExtra(MapActivity.LATITUDE, location.getLatitude());
                     mapIntent.putExtra(MapActivity.LONGITUDE, location.getLongitude());
@@ -182,6 +188,10 @@ public class WelcomeActivity extends Activity {
             case R.id.list:
                 final Intent intent = new Intent(this, ListActivity.class);
                 intent.putExtra(ListActivity.TYPE, ListActivity.ALL);
+                if (location != null) {
+                    intent.putExtra(ListActivity.HERE_LATITUDE, location.getLatitude());
+                    intent.putExtra(ListActivity.HERE_LONGITUDE, location.getLongitude());
+                }
                 startActivity(intent);
                 return true;
             default:
@@ -646,18 +656,22 @@ public class WelcomeActivity extends Activity {
 
         @Override
         protected void onReceiveResult(int resultCode, Bundle resultData) {
-            switch (resultCode) {
-                case SendingReportService.RESULT_CODE_SUCCESS:
-                    if (activity != null) activity.displaySendSuccess();
-                    break;
-                case SendingReportService.RESULT_CODE_PROGRESS:
-                    lastProgressMessage = resultData.getString(SendingReportService.PROGRESS_MESSAGE);
-                    if (activity != null) activity.displaySendProgress(lastProgressMessage);
-                    break;
-                case SendingReportService.RESULT_CODE_ERROR:
-                    if (activity != null)
-                        activity.displaySendError(resultData.getString(SendingReportService.ERROR_MESSAGE));
-                    break;
+            try {
+                switch (resultCode) {
+                    case SendingReportService.RESULT_CODE_SUCCESS:
+                        if (activity != null) activity.displaySendSuccess();
+                        break;
+                    case SendingReportService.RESULT_CODE_PROGRESS:
+                        lastProgressMessage = resultData.getString(SendingReportService.PROGRESS_MESSAGE);
+                        if (activity != null) activity.displaySendProgress(lastProgressMessage);
+                        break;
+                    case SendingReportService.RESULT_CODE_ERROR:
+                        if (activity != null)
+                            activity.displaySendError(resultData.getString(SendingReportService.ERROR_MESSAGE));
+                        break;
+                }
+            } catch (Exception e) {
+                if (activity != null) activity.reportInternalError("Sending images", e);
             }
         }
     }
@@ -700,19 +714,28 @@ public class WelcomeActivity extends Activity {
      * Called when the user click on send button
      */
     public void send(View view) {
-        Spot address = getAddress();
-        if ((address != null) && isConnected() && !photos.isEmpty()) {
-            sendReportReceiver = new SendReportReceiver(new Handler(), this);
-            Intent intent = new Intent(this, SendingReportService.class);
-            intent.putExtra(SendingReportService.RECEIVER, sendReportReceiver);
-            intent.putExtra(SendingReportService.STREET, address.street);
-            intent.putExtra(SendingReportService.DISTRICT, address.district);
-            intent.putExtra(SendingReportService.IMAGE_SIZE, PreferencesActivity.getImageSize(getApplicationContext()).name());
-            intent.putExtra(SendingReportService.IMAGE_QUALITY, PreferencesActivity.getImageQuality(getApplicationContext()));
-            intent.putStringArrayListExtra(SendingReportService.IMAGES, Photo.toArrayList(photos));
-            startService(intent);
-            updateSendButton();
+        try {
+            final Spot address = getAddress();
+            if ((address != null) && isConnected() && !photos.isEmpty()) {
+                sendReportReceiver = new SendReportReceiver(new Handler(), this);
+                Intent intent = new Intent(this, SendingReportService.class);
+                intent.putExtra(SendingReportService.RECEIVER, sendReportReceiver);
+                intent.putExtra(SendingReportService.STREET, address.street);
+                intent.putExtra(SendingReportService.DISTRICT, address.district);
+                intent.putExtra(SendingReportService.IMAGE_SIZE, PreferencesActivity.getImageSize(getApplicationContext()).name());
+                intent.putExtra(SendingReportService.IMAGE_QUALITY, PreferencesActivity.getImageQuality(getApplicationContext()));
+                intent.putStringArrayListExtra(SendingReportService.IMAGES, Photo.toArrayList(photos));
+                startService(intent);
+                updateSendButton();
+            }
+        } catch (Exception e) {
+            reportInternalError("Sending images", e);
         }
+    }
+
+    void reportInternalError(@NonNull String message, @NonNull Exception e) {
+        server.startLog(null, message, e);
+        displayError(getString(R.string.error_message, e.getMessage()));
     }
 
     boolean isSendingPhoto() {

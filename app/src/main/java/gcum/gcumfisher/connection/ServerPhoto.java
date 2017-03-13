@@ -32,31 +32,51 @@ public class ServerPhoto {
         }
     }
 
-    static class Coordinates {
+    public static class Coordinates {
+        @NonNull
         private final Point point;
+        @NonNull
         private final CoordinatesSource source;
 
-        Coordinates(Point point, CoordinatesSource source) {
+        Coordinates(@NonNull Point point, @NonNull CoordinatesSource source) {
             this.point = point;
             this.source = source;
+        }
+
+        @NonNull
+        public Point getPoint() {
+            return point;
+        }
+
+        @NonNull
+        public CoordinatesSource getSource() {
+            return source;
         }
     }
 
     public static class Location {
+        @NonNull
         private final Address address;
+        @NonNull
         private final Coordinates coordinates;
 
-        Location(Address address, Coordinates coordinates) {
+        Location(@NonNull Address address, @NonNull Coordinates coordinates) {
             this.address = address;
             this.coordinates = coordinates;
         }
 
+        @NonNull
         public Address getAddress() {
             return address;
         }
+
+        @NonNull
+        public Coordinates getCoordinates() {
+            return coordinates;
+        }
     }
 
-    enum CoordinatesSource {Street, Device}
+    public enum CoordinatesSource {Street, Device}
 
     private final String id;
     @NonNull
