@@ -242,11 +242,13 @@ public class ListActivity extends Activity {
             return getStyled(text, R.style.OverPrint);
         }
 
-        private View getLikeView(final String photoId, int count) {
+        private View getLikeView(final String photoId, int count, boolean isLiked) {
             final LinearLayout res = new LinearLayout(ListActivity.this);
             final ImageView heart = new ImageView(ListActivity.this);
             heart.setImageResource(R.drawable.heart);
-            final TextView countView = getOverPrintStyle(Integer.toString(count));
+            final int color = getResources().getColor(isLiked ? R.color.red : R.color.white);
+            heart.setColorFilter(color, PorterDuff.Mode.MULTIPLY);
+            final TextView countView = getStyled(Integer.toString(count), isLiked ? R.style.OverPrintLiked : R.style.OverPrint);
             res.addView(countView);
             res.addView(heart);
             res.setOnClickListener(new View.OnClickListener() {
@@ -305,7 +307,7 @@ public class ListActivity extends Activity {
                 authorLine.setBackgroundResource(R.color.overPrintPanel);
                 authorLine.setOrientation(LinearLayout.HORIZONTAL);
                 authorLine.setDividerPadding(15);
-                authorLine.addView(getLikeView(serverPhoto.getId(), serverPhoto.getLikesCount()));
+                authorLine.addView(getLikeView(serverPhoto.getId(), serverPhoto.getLikesCount(), serverPhoto.isLiked()));
                 if (serverPhoto.getUsername() != null)
                     authorLine.addView(getOverPrintStyle(serverPhoto.getUsername()));
                 view.addView(authorLine, getBottomLayoutParams(20));
@@ -350,7 +352,8 @@ public class ListActivity extends Activity {
 
         @Override
         protected List<ServerPhoto> doInBackgroundOrCrash(Boolean[] params) throws Exception {
-            return server.getList(BATCH_SIZE, sort, here, null);
+            final AutoLogin autoLogin = LoginActivity.getAutoLogin(getApplicationContext());
+            return server.getList(autoLogin, BATCH_SIZE, sort, here, null);
         }
     }
 
@@ -369,7 +372,8 @@ public class ListActivity extends Activity {
 
         @Override
         protected List<ServerPhoto> doInBackgroundOrCrash(Point[] points) throws Exception {
-            return server.getPointInfo(points[0]);
+            final AutoLogin autoLogin = LoginActivity.getAutoLogin(getApplicationContext());
+            return server.getPointInfo(autoLogin, points[0]);
         }
     }
 

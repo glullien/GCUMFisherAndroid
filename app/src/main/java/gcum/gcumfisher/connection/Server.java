@@ -208,8 +208,9 @@ public class Server {
 
     public enum Sort {date, closest}
 
-    public List<ServerPhoto> getList(int number, @NonNull Sort sort, @Nullable Point point, @Nullable String start) throws Exception {
+    public List<ServerPhoto> getList(@Nullable AutoLogin autoLogin, int number, @NonNull Sort sort, @Nullable Point point, @Nullable String start) throws Exception {
         final Map<String, String> params = new HashMap<>();
+        if (autoLogin != null) params.put("autoLogin", autoLogin.getCode());
         params.put("district", "All");
         params.put("sort", sort.toString());
         if (point != null) {
@@ -222,8 +223,9 @@ public class Server {
         return getServerPhotos(res.getJSONArray("photos"));
     }
 
-    public List<ServerPhoto> getPointInfo(Point point) throws Exception {
+    public List<ServerPhoto> getPointInfo(@Nullable AutoLogin autoLogin, Point point) throws Exception {
         final Map<String, String> params = new HashMap<>();
+        if (autoLogin != null) params.put("autoLogin", autoLogin.getCode());
         params.put("latitude", Long.toString(point.getLatitude()));
         params.put("longitude", Long.toString(point.getLongitude()));
         params.put("timeFrame", "All");
