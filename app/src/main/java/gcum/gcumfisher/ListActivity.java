@@ -106,7 +106,7 @@ public class ListActivity extends Activity {
     }
 
     public void more(View view) {
-        if (latest != null){
+        if (latest != null) {
             findViewById(R.id.more).setEnabled(false);
             new GetList().execute();
         }
@@ -363,7 +363,7 @@ public class ListActivity extends Activity {
             if (photos != null) {
                 final List<ServerPhoto> list = photos.getPhotos();
                 showPhotos(list);
-                latest = list.get(list.size() - 1).getId();
+                latest = list.isEmpty() ? null : list.get(list.size() - 1).getId();
                 ((Button) findViewById(R.id.more)).setText(getResources().getString(R.string.more_nb_after, photos.getNbAfter()));
             }
         }
