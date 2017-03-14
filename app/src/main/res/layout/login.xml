@@ -122,6 +122,7 @@
         android:layout_marginLeft="25dp"
         android:layout_marginRight="25dp"
         android:layout_marginStart="25dp"
+        android:autoLink="web"
         android:textSize="15sp" />
 
 </RelativeLayout>

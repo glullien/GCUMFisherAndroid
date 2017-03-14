@@ -23,7 +23,7 @@ public class PreferencesActivity extends Activity {
     private static final String IMAGE_SIZE = "image_size";
     private static final String IMAGE_QUALITY = "image_quality";
 
-    public enum ImageSize {
+    enum ImageSize {
         Small(R.id.images_size_small, 400),
         Medium(R.id.images_size_medium, 800),
         Maximum(R.id.images_size_maximum, Integer.MAX_VALUE);
@@ -77,6 +77,7 @@ public class PreferencesActivity extends Activity {
 
             }
         });
+        ((TextView) findViewById(R.id.info)).setText(getString(R.string.base_url));
     }
 
     private void updateImageQualityText (int quality) {
