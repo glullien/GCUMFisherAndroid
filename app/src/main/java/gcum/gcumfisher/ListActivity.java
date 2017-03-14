@@ -16,6 +16,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -43,20 +44,25 @@ public class ListActivity extends Activity {
     public static final String LONGITUDE = "gcum.gcumfisher.ListActivity.LONGITUDE";
     public static final String HERE_LATITUDE = "gcum.gcumfisher.ListActivity.HERE_LATITUDE";
     public static final String HERE_LONGITUDE = "gcum.gcumfisher.ListActivity.HERE_LONGITUDE";
-    public static final int BATCH_SIZE = 20;
+    public static final int BATCH_SIZE = 10;
     private float imageLoadRatio = 2;
     private Server server;
     private Point here;
     private Server.Sort sort = Server.Sort.date;
+    private String latest;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.list);
 
+        ((ViewGroup) findViewById(R.id.images)).removeAllViews();
+        photoToLoad.clear();
+        latest = null;
         Intent intent = getIntent();
         if (intent == null) here = null;
         else {
+            findViewById(R.id.more).setEnabled(false);
             switch (intent.getIntExtra(TYPE, -1)) {
                 case ALL:
                     new GetList().execute();
@@ -99,9 +105,19 @@ public class ListActivity extends Activity {
         }
     }
 
+    public void more(View view) {
+        if (latest != null){
+            findViewById(R.id.more).setEnabled(false);
+            new GetList().execute();
+        }
+    }
+
     private void refreshList() {
         if (getPhotosTask != null) getPhotosTask.cancel(false);
         ((ViewGroup) findViewById(R.id.images)).removeAllViews();
+        photoToLoad.clear();
+        findViewById(R.id.more).setEnabled(false);
+        latest = null;
         photoToLoad.clear();
         new GetList().execute();
     }
@@ -111,8 +127,6 @@ public class ListActivity extends Activity {
 
     private void showPhotos(List<ServerPhoto> photos) {
         if (getPhotosTask != null) getPhotosTask.cancel(false);
-        ((ViewGroup) findViewById(R.id.images)).removeAllViews();
-        photoToLoad.clear();
         photoToLoad.addAll(photos);
         getPhotosTask = new GetPhotos();
         getPhotosTask.execute();
@@ -221,10 +235,16 @@ public class ListActivity extends Activity {
         }
 
         @Override
+        protected void onPostExecuteSuccess(Boolean b) {
+            findViewById(R.id.more).setEnabled(true);
+        }
+
+        @Override
         protected void onPostExecuteError(Exception error) {
             server.startLog(null, "Downloading photos", error);
             error.printStackTrace();
             displayError(getResources().getString(R.string.error_message, error.getMessage()));
+            findViewById(R.id.more).setEnabled(true);
         }
 
         @NonNull
@@ -337,10 +357,15 @@ public class ListActivity extends Activity {
         }
     }
 
-    private class GetList extends AsyncTaskE<Boolean, Boolean, List<ServerPhoto>> {
+    private class GetList extends AsyncTaskE<Boolean, Boolean, Server.GetListResult> {
         @Override
-        protected void onPostExecuteSuccess(List<ServerPhoto> photos) {
-            if (photos != null) showPhotos(photos);
+        protected void onPostExecuteSuccess(Server.GetListResult photos) {
+            if (photos != null) {
+                final List<ServerPhoto> list = photos.getPhotos();
+                showPhotos(list);
+                latest = list.get(list.size() - 1).getId();
+                ((Button) findViewById(R.id.more)).setText(getResources().getString(R.string.more_nb_after, photos.getNbAfter()));
+            }
         }
 
         @Override
@@ -351,9 +376,9 @@ public class ListActivity extends Activity {
         }
 
         @Override
-        protected List<ServerPhoto> doInBackgroundOrCrash(Boolean[] params) throws Exception {
+        protected Server.GetListResult doInBackgroundOrCrash(Boolean[] params) throws Exception {
             final AutoLogin autoLogin = LoginActivity.getAutoLogin(getApplicationContext());
-            return server.getList(autoLogin, BATCH_SIZE, sort, here, null);
+            return server.getList(autoLogin, BATCH_SIZE, sort, here, latest);
         }
     }
 

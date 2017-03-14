@@ -208,7 +208,26 @@ public class Server {
 
     public enum Sort {date, closest}
 
-    public List<ServerPhoto> getList(@Nullable AutoLogin autoLogin, int number, @NonNull Sort sort, @Nullable Point point, @Nullable String start) throws Exception {
+    public static class GetListResult{
+        @NonNull
+        private final List<ServerPhoto> photos;
+        private final int nbAfter;
+
+        GetListResult(@NonNull List<ServerPhoto> photos, int nbAfter) {
+            this.photos = photos;
+            this.nbAfter = nbAfter;
+        }
+
+        @NonNull
+        public List<ServerPhoto> getPhotos() {
+            return photos;
+        }
+
+        public int getNbAfter() {
+            return nbAfter;
+        }
+    }
+    public GetListResult getList(@Nullable AutoLogin autoLogin, int number, @NonNull Sort sort, @Nullable Point point, @Nullable String start) throws Exception {
         final Map<String, String> params = new HashMap<>();
         if (autoLogin != null) params.put("autoLogin", autoLogin.getCode());
         params.put("district", "All");
@@ -220,7 +239,7 @@ public class Server {
         params.put("start", (start == null) ? "Latest" : start);
         params.put("number", Integer.toString(number));
         final JSONObject res = queryJson("getList", params);
-        return getServerPhotos(res.getJSONArray("photos"));
+        return new GetListResult(getServerPhotos(res.getJSONArray("photos")), res.getInt("nbAfter"));
     }
 
     public List<ServerPhoto> getPointInfo(@Nullable AutoLogin autoLogin, Point point) throws Exception {

@@ -10,7 +10,7 @@
         android:id="@+id/progress"
         style="@android:style/Widget.ProgressBar.Horizontal"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="5dp" />
 
     <ScrollView
         android:id="@+id/imagesScroll"
@@ -20,11 +20,27 @@
         android:padding="5dp">
 
         <LinearLayout
-            android:id="@+id/images"
+            android:id="@+id/scrollable"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@color/photosListBackground"
-            android:orientation="vertical" />
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:id="@+id/images"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+
+            <Button
+                android:id="@+id/more"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:onClick="more"
+                android:text="@string/more" />
+        </LinearLayout>
 
     </ScrollView>
+
+
 </LinearLayout>

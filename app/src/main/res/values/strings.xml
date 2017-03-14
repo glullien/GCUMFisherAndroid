@@ -68,4 +68,6 @@
     <string name="details">Détails</string>
     <string name="paris">Paris</string>
     <string name="distance">%d m</string>
+    <string name="more">Plus</string>
+    <string name="more_nb_after">Plus (%d)</string>
 </resources>
