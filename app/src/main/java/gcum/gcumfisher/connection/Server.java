@@ -227,11 +227,12 @@ public class Server {
             return nbAfter;
         }
     }
-    public GetListResult getList(@Nullable AutoLogin autoLogin, int number, @NonNull Sort sort, @Nullable Point point, @Nullable String start) throws Exception {
+    public GetListResult getList(@Nullable AutoLogin autoLogin, int number, @NonNull Sort sort, @Nullable Point point, @Nullable String author, @Nullable String start) throws Exception {
         final Map<String, String> params = new HashMap<>();
         if (autoLogin != null) params.put("autoLogin", autoLogin.getCode());
         params.put("district", "All");
         params.put("sort", sort.toString());
+        params.put("author", author);
         if (point != null) {
             params.put("latitude", Long.toString(point.getLatitude()));
             params.put("longitude", Long.toString(point.getLongitude()));

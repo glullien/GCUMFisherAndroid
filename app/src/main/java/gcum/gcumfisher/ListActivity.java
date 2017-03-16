@@ -2,6 +2,7 @@ package gcum.gcumfisher;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -11,15 +12,21 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.Px;
 import android.support.annotation.StyleRes;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -50,6 +57,7 @@ public class ListActivity extends Activity {
     private Point here;
     private Server.Sort sort = Server.Sort.date;
     private String latest;
+    private String author = "<all>";
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -82,11 +90,9 @@ public class ListActivity extends Activity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        if (here == null) return false;
-        else {
-            getMenuInflater().inflate(R.menu.list, menu);
-            return true;
-        }
+        getMenuInflater().inflate(R.menu.list, menu);
+        menu.findItem(R.id.closest).setVisible(here != null);
+        return true;
     }
 
     @Override
@@ -100,9 +106,90 @@ public class ListActivity extends Activity {
                 sort = Server.Sort.date;
                 refreshList();
                 return true;
+            case R.id.filter:
+                openFilterDialog();
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    public void setFilter(String author) {
+        this.author = author;
+        refreshList();
+    }
+
+    public void openFilterDialog() {
+        try {
+            final Dialog dialog = new Dialog(this);
+            dialog.setContentView(R.layout.list_filter);
+            dialog.setTitle(R.string.filter);
+            dialog.findViewById(R.id.ok).setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    int selectedId = ((RadioGroup) dialog.findViewById(R.id.authors)).getCheckedRadioButtonId();
+                    String username = ((EditText) dialog.findViewById(R.id.authorUsername)).getText().toString();
+                    switch (selectedId) {
+                        case R.id.authorAll:
+                            setFilter("<all>");
+                            dialog.dismiss();
+                            break;
+                        case R.id.authorMyself:
+                            setFilter("<myself>");
+                            dialog.dismiss();
+                            break;
+                        case R.id.authorOther:
+                            if (username.length() > 0) {
+                                setFilter(username);
+                                dialog.dismiss();
+                            }
+                            break;
+                    }
+                }
+            });
+            ((EditText) dialog.findViewById(R.id.authorUsername)).addTextChangedListener(new TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                }
+
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    ((RadioButton) dialog.findViewById(R.id.authorOther)).setChecked(true);
+                }
+
+                @Override
+                public void afterTextChanged(Editable s) {
+                }
+            });
+            dialog.findViewById(R.id.cancel).setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    dialog.dismiss();
+                }
+            });
+            switch (author) {
+                case "<all>":
+                    ((RadioButton) dialog.findViewById(R.id.authorAll)).setChecked(true);
+                    break;
+                case "<myself>":
+                    ((RadioButton) dialog.findViewById(R.id.authorMyself)).setChecked(true);
+                    break;
+                default:
+                    ((RadioButton) dialog.findViewById(R.id.authorOther)).setChecked(true);
+                    ((EditText) dialog.findViewById(R.id.authorUsername)).setText(author);
+                    break;
+            }
+            dialog.findViewById(R.id.authorMyself).setVisibility((LoginActivity.getAutoLogin(getApplicationContext()) != null) ? View.VISIBLE : View.GONE);
+            dialog.show();
+        } catch (Exception e) {
+            reportInternalError("Opening filter dialog", e);
+        }
+    }
+
+    void reportInternalError(@NonNull String message, @NonNull Exception e) {
+        Log.e("ListActivity", message, e);
+        server.startLog(null, message, e);
+        displayError(getString(R.string.error_message, e.getMessage()));
     }
 
     public void more(View view) {
@@ -378,7 +465,7 @@ public class ListActivity extends Activity {
         @Override
         protected Server.GetListResult doInBackgroundOrCrash(Boolean[] params) throws Exception {
             final AutoLogin autoLogin = LoginActivity.getAutoLogin(getApplicationContext());
-            return server.getList(autoLogin, BATCH_SIZE, sort, here, latest);
+            return server.getList(autoLogin, BATCH_SIZE, sort, here, author, latest);
         }
     }
 

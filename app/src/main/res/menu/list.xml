@@ -10,4 +10,9 @@
         android:icon="@android:drawable/ic_menu_my_calendar"
         android:showAsAction="ifRoom"
         android:title="@string/by_date" />
+    <item
+        android:id="@+id/filter"
+        android:icon="@drawable/filter"
+        android:showAsAction="ifRoom"
+        android:title="@string/filter" />
 </menu>

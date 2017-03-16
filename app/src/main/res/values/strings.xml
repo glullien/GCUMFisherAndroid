@@ -32,7 +32,7 @@
         <item quantity="one">%d jour</item>
         <item quantity="other">%d jours</item>
     </plurals>
-    <string name="username">Nom</string>
+    <string name="username">Pseudo</string>
     <string name="password">Mot de passe</string>
     <string name="passwordCheck">Mot de passe (confirmation)</string>
     <string name="email">E-mail</string>
@@ -65,9 +65,14 @@
     <string name="list">Liste</string>
     <string name="by_date">Par date</string>
     <string name="close_to_me">Près de moi</string>
+    <string name="filter">Filtre</string>
+    <string name="to_filter">Filtrer</string>
     <string name="details">Détails</string>
     <string name="paris">Paris</string>
     <string name="distance">%d m</string>
     <string name="more">Plus</string>
     <string name="more_nb_after">Plus (%d)</string>
+    <string name="auther">Auteur</string>
+    <string name="all">Tous</string>
+    <string name="myself">Moi-même</string>
 </resources>
