@@ -20,6 +20,7 @@ import android.support.annotation.Nullable;
 import android.support.annotation.StringRes;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.FileProvider;
+import android.util.Log;
 import android.view.GestureDetector;
 import android.view.Gravity;
 import android.view.Menu;
@@ -735,6 +736,7 @@ public class WelcomeActivity extends Activity {
     }
 
     void reportInternalError(@NonNull String message, @NonNull Exception e) {
+        Log.e("WelcomeActivity", message, e);
         server.startLog(null, message, e);
         displayError(getString(R.string.error_message, e.getMessage()));
     }
