@@ -403,9 +403,14 @@ public class ListActivity extends Activity {
                 topLines.addView(getStyled(serverPhoto.getAddress(getResources()), R.style.OverPrintSmall));
 
                 final ServerPhoto.Coordinates coordinates = serverPhoto.getLocation().getCoordinates();
-                if ((coordinates.getSource() == ServerPhoto.CoordinatesSource.Device) && (here != null)) {
-                    long distance = Math.round(here.distance(coordinates.getPoint()));
-                    topLines.addView(getStyled(getResources().getString(R.string.distance, distance), R.style.OverPrintSmall));
+                final ServerPhoto.CoordinatesSource source = coordinates.getSource();
+                if (here != null) switch (source) {
+                    case Device:
+                        long distance = Math.round(here.distance(coordinates.getPoint()));
+                        topLines.addView(getStyled(getResources().getString(R.string.distance, distance), R.style.OverPrintSmall));
+                        break;
+                    case Street:
+                        break;
                 }
 
                 view.addView(topLines, getTopLayoutParams(10));
