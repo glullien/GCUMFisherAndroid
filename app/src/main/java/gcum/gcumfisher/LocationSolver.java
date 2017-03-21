@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -38,7 +39,7 @@ class LocationSolver {
 
         void setLocation(@Nullable Location location);
 
-        void setLocationResults(@NonNull List<Spot> addresses);
+        void setAddresses(@NonNull List<Spot> addresses);
     }
 
     private final Listener listener;
@@ -56,13 +57,14 @@ class LocationSolver {
     private class QueryStreet extends AsyncTaskE<Location, Boolean, List<Spot>> {
         @Override
         protected void onPostExecuteError(Exception error) {
-            error.printStackTrace();
+            server.startLog(null, error.getMessage(), error);
+            Log.e("LocationSolver", error.getMessage(), error);
             listener.displayError(activity.getString(R.string.error_message, error.getMessage()));
         }
 
         @Override
         protected void onPostExecuteSuccess(List<Spot> spots) {
-            listener.setLocationResults(spots);
+            listener.setAddresses(spots);
         }
 
         @Override
@@ -95,7 +97,7 @@ class LocationSolver {
 
         @Override
         public void onProviderDisabled(String provider) {
-            listener.setLocationResults(Collections.<Spot>emptyList());
+            listener.setAddresses(Collections.<Spot>emptyList());
             listener.displayError(activity.getString(R.string.location_provider_disabled, provider));
             listener.setLocation(null);
         }

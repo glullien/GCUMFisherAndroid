@@ -236,8 +236,10 @@ public class WelcomeActivity extends Activity {
     private void startLocationSolver() {
         locationSolver = LocationSolver.startTracking(this, new LocationSolver.Listener() {
             @Override
-            public void displayError(@NonNull CharSequence message) {
-                // WelcomeActivity.this.displayError(message);
+            public void displayError(@NonNull CharSequence sequence) {
+                final String message = sequence.toString();
+                server.startLog(null, message);
+                Log.e("WelcomeActivity", message);
                 if (getAddress() == null) setStreetTextView(message, R.color.error);
             }
 
@@ -258,7 +260,7 @@ public class WelcomeActivity extends Activity {
              * Called when the GPS find a spot
              */
             @Override
-            public void setLocationResults(@NonNull List<Spot> addresses) {
+            public void setAddresses(@NonNull List<Spot> addresses) {
                 if (addresses.isEmpty() && (gpsAddress != null)) {
                     gpsAddress = null;
                     updateLocation();
@@ -270,7 +272,8 @@ public class WelcomeActivity extends Activity {
 
             private boolean sameAddresses(@NonNull List<Spot> addresses1, @NonNull List<Spot> addresses2) {
                 if (addresses1.size() != addresses2.size()) return false;
-                for (Spot spot : addresses2) if (addresses1.contains(spot)) return false;
+                for (int i = 0; i < addresses1.size(); i++)
+                    if (!addresses1.get(i).equals(addresses2.get(i))) return false;
                 return true;
             }
         }, MAX_QUICK_LOCATIONS);
