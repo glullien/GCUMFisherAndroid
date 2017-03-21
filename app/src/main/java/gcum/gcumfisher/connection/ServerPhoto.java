@@ -9,22 +9,30 @@ import gcum.gcumfisher.R;
 public class ServerPhoto {
 
     public static class Address {
+        @NonNull
         private final String street;
         private final int district;
+        @NonNull
         private final String city;
 
-        Address(String street, int district, String city) {
+        Address(@NonNull String street, int district, @NonNull String city) {
             this.street = street;
             this.district = district;
             this.city = city;
         }
 
+        @NonNull
         public String getStreet() {
             return street;
         }
 
         public int getDistrict() {
             return district;
+        }
+
+        @Override
+        public String toString() {
+            return "Address{street=" + street + ", district=" + district + ", city=" + city + "}";
         }
 
         public String getAddress(Resources resources) {
@@ -76,7 +84,7 @@ public class ServerPhoto {
         }
     }
 
-    public enum CoordinatesSource {Street, Device}
+    enum CoordinatesSource {Street, Device}
 
     private final String id;
     @NonNull
@@ -102,16 +110,6 @@ public class ServerPhoto {
 
     public String getId() {
         return id;
-    }
-
-    @NonNull
-    public String getDate() {
-        return date;
-    }
-
-    @Nullable
-    public String getTime() {
-        return time;
     }
 
     @NonNull
@@ -141,6 +139,11 @@ public class ServerPhoto {
 
     public String getAddress(Resources resources) {
         return location.address.getAddress(resources);
+    }
+
+    @Override
+    public String toString() {
+        return "ServerPhoto{id=" + id + ", date=" + date + ", time=" + time + ", location=" + location + ", username=" + username + ", likesCount=" + likesCount + ", isLiked=" + isLiked + "}";
     }
 }
 
