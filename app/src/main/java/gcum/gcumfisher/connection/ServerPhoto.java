@@ -84,7 +84,7 @@ public class ServerPhoto {
         }
     }
 
-    enum CoordinatesSource {Street, Device}
+    public enum CoordinatesSource {Street, Device}
 
     private final String id;
     @NonNull
