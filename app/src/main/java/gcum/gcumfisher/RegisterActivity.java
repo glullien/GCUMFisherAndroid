@@ -22,7 +22,7 @@ public class RegisterActivity extends Activity {
         setContentView(R.layout.register);
         server = new Server(getResources());
 
-        ((TextView) findViewById(R.id.info)).setText(server.getBaseUrl());
+        ((TextView) findViewById(R.id.info)).setText(server.getBaseUrls());
     }
 
     public void register(View view) {

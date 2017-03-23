@@ -22,7 +22,7 @@ public class ForgotEmailActivity extends Activity {
         setContentView(R.layout.forgot_email);
         server = new Server(getResources());
 
-        ((TextView) findViewById(R.id.info)).setText(server.getBaseUrl());
+        ((TextView) findViewById(R.id.info)).setText(server.getBaseUrls());
     }
 
     public void sendPassword(View view) {

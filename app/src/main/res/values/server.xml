@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="base_url_dev">http://192.168.1.13:8080/</string>
-    <string name="base_url">https://www.gcum.lol/</string>
+    <string name="base_url_dns">https://www.gcum.lol/</string>
+    <string name="base_url">https://www.parisestunparking.lol/ https://www.gcum.lol/</string>
 </resources>

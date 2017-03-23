@@ -4,6 +4,7 @@ import android.content.res.Resources;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.Log;
 
 import com.android.internal.http.multipart.FilePart;
 import com.android.internal.http.multipart.MultipartEntity;
@@ -28,6 +29,7 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -37,6 +39,7 @@ import java.util.Map;
 import java.util.TimeZone;
 
 import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLPeerUnverifiedException;
 
 import gcum.gcumfisher.BuildConfig;
 import gcum.gcumfisher.R;
@@ -45,16 +48,45 @@ import gcum.gcumfisher.R;
 public class Server {
     @NonNull
     private final Resources resources;
-    @NonNull
-    private final String baseUrl;
+    @Nullable
+    private String baseUrl;
 
     public Server(@NonNull Resources resources) {
-        baseUrl = resources.getString(R.string.base_url);
         this.resources = resources;
     }
 
     @NonNull
-    public String getBaseUrl() {
+    private String seekBaseUrl(@NonNull List<String> baseUrls) throws Exception {
+        for (String baseUrl : baseUrls) {
+            if (test(baseUrl)) return baseUrl;
+        }
+        Log.e("Server", "Cannot find correct url");
+        throw new IOException("Cannot find correct url");
+    }
+
+    private boolean test(@NonNull String baseUrl) throws Exception {
+        try {
+            HttpURLConnection conn = getConnection(baseUrl + "index.jsp");
+            conn.setReadTimeout(10000);
+            conn.setConnectTimeout(15000);
+            conn.setRequestMethod("GET");
+            conn.setUseCaches(false);
+            conn.setDoInput(true);
+            return 1 == conn.getInputStream().read(new byte[1]);
+        } catch (SSLPeerUnverifiedException e) {
+            Log.e("Server", "Failed test for " + baseUrl, e);
+            return false;
+        }
+    }
+
+    @NonNull
+    public String getBaseUrls() {
+        return resources.getString(R.string.base_url);
+    }
+
+    @NonNull
+    private String getBaseUrl() throws Exception {
+        if (baseUrl == null) baseUrl = seekBaseUrl(Arrays.asList(getBaseUrls().split(" ")));
         return baseUrl;
     }
 
@@ -103,7 +135,7 @@ public class Server {
     }
 
     private InputStream query(@NonNull String servlet, Map<String, String> params, Part part) throws Exception {
-        HttpURLConnection conn = getConnection(baseUrl + servlet);
+        HttpURLConnection conn = getConnection(getBaseUrl() + servlet);
         conn.setReadTimeout(10000);
         conn.setConnectTimeout(15000);
         conn.setRequestMethod("POST");
@@ -208,7 +240,7 @@ public class Server {
 
     public enum Sort {date, closest}
 
-    public static class GetListResult{
+    public static class GetListResult {
         @NonNull
         private final List<ServerPhoto> photos;
         private final int nbAfter;
@@ -227,6 +259,7 @@ public class Server {
             return nbAfter;
         }
     }
+
     public GetListResult getList(@Nullable AutoLogin autoLogin, int number, @NonNull Sort sort, @Nullable Point point, @Nullable String author, @Nullable String start) throws Exception {
         final Map<String, String> params = new HashMap<>();
         if (autoLogin != null) params.put("autoLogin", autoLogin.getCode());
@@ -305,14 +338,14 @@ public class Server {
     }
 
     public HttpURLConnection getPhoto(String id, int maxSize) throws Exception {
-        HttpURLConnection conn = getConnection(baseUrl + "getPhoto?id=" + id + "&maxSize=" + maxSize);
+        HttpURLConnection conn = getConnection(getBaseUrl() + "getPhoto?id=" + id + "&maxSize=" + maxSize);
         conn.setDoInput(true);
         conn.connect();
         return conn;
     }
 
     public HttpURLConnection getPhoto(String id) throws Exception {
-        HttpURLConnection conn = getConnection(baseUrl + "getPhoto?id=" + id);
+        HttpURLConnection conn = getConnection(getBaseUrl() + "getPhoto?id=" + id);
         conn.setDoInput(true);
         conn.connect();
         return conn;
