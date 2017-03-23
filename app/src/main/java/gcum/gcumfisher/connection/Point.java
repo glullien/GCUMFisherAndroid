@@ -1,9 +1,12 @@
 package gcum.gcumfisher.connection;
 
+import android.content.res.Resources;
 import android.location.Location;
 import android.support.annotation.NonNull;
 
 import com.google.android.gms.maps.model.LatLng;
+
+import gcum.gcumfisher.R;
 
 public class Point {
     private final long latitude;
@@ -46,5 +49,9 @@ public class Point {
         final double latB = toRadian(other.latitude);
         final double lonB = toRadian(other.longitude);
         return Math.round(R * (Math.PI / 2 - Math.asin(Math.sin(latB) * Math.sin(latA) + Math.cos(lonB - lonA) * Math.cos(latB) * Math.cos(latA))));
+    }
+
+    public String toString(@NonNull Resources resources) {
+        return resources.getString(R.string.coordinates, latitude * 1E-5, longitude * 1E-5);
     }
 }
