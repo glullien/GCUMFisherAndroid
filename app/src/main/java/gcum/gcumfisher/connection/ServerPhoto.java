@@ -130,11 +130,14 @@ public class ServerPhoto {
         return isLiked;
     }
 
-    public String getDateTime(Resources resources) {
-        final String res;
-        if (time == null) res = resources.getString(R.string.date_format, date);
-        else res = resources.getString(R.string.date_time_format, date, time);
-        return res;
+    @NonNull
+    public String getDate() {
+        return date;
+    }
+
+    @Nullable
+    public String getTime() {
+        return time;
     }
 
     public String getAddress(Resources resources) {

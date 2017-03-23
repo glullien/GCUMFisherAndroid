@@ -19,8 +19,6 @@
     <string name="images_sent">Images envoyées</string>
     <string name="back_to_the_hunt">Retour à la chasse</string>
     <string name="address_format">%1$s, dans le %2$de"</string>
-    <string name="date_format">%1$s"</string>
-    <string name="date_time_format">%1$s : %2$s"</string>
     <string name="success">Succès</string>
     <string name="required_confirmation">Confirmation requise</string>
     <string name="clear_all_photos_confirmation">Voulez-vous réellement retirer toutes les photos ?</string>
@@ -70,6 +68,7 @@
     <string name="details">Détails</string>
     <string name="paris">Paris</string>
     <string name="distance">%d m</string>
+    <string name="coordinates">%1$f°N / %2$f°E</string>
     <string name="more">Plus</string>
     <string name="more_nb_after">Plus (%d)</string>
     <string name="auther">Auteur</string>

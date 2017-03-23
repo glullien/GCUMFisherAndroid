@@ -10,7 +10,7 @@
     <color name="transparentBlack">#9FFF</color>
 
     <color name="overPrint">@color/black</color>
-    <color name="overPrintLiked">@color/red</color>
+    <color name="liked">@color/red</color>
 
     <color name="removeBackground">@color/red</color>
     <color name="cancelBackground">@color/fadeBlue</color>
@@ -19,7 +19,8 @@
 
     <color name="address">@color/black</color>
     <color name="progress">@color/gray</color>
-    <color name="photosListBackground">@color/lightGray</color>
+    <color name="photosListBackground">@color/white</color>
+    <color name="photosSeparator">@color/gray</color>
     <color name="overPrintPanel">@color/transparentBlack</color>
 
 </resources>
