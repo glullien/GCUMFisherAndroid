@@ -342,7 +342,7 @@ public class ListActivity extends Activity {
             if (here == null) distance = null;
             else switch (source) {
                 case Device:
-                    distance = getResources().getString(R.string.distance, Math.round(here.distance(coordinates.getPoint())));
+                    distance = coordinates.getPoint().distanceToString(getResources(), here);
                     break;
                 case Street:
                     distance = null;

@@ -67,8 +67,10 @@
     <string name="to_filter">Filtrer</string>
     <string name="details">Détails</string>
     <string name="paris">Paris</string>
-    <string name="distance">%d m</string>
-    <string name="coordinates">%1$f°N / %2$f°E</string>
+    <string name="today">Aujourd\'hui</string>
+    <string name="distance_meters">%d mètres</string>
+    <string name="distance_kilometers">%.1f kms</string>
+    <string name="coordinates">%1$.5f°N / %2$.5f°E</string>
     <string name="more">Plus</string>
     <string name="more_nb_after">Plus (%d)</string>
     <string name="auther">Auteur</string>

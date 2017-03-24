@@ -51,6 +51,13 @@ public class Point {
         return Math.round(R * (Math.PI / 2 - Math.asin(Math.sin(latB) * Math.sin(latA) + Math.cos(lonB - lonA) * Math.cos(latB) * Math.cos(latA))));
     }
 
+    public String distanceToString(@NonNull Resources resources, @NonNull Point other) {
+        final int distance = Math.round(distance(other));
+        if (distance < 1000) return resources.getString(R.string.distance_meters, distance);
+        else
+            return resources.getString(R.string.distance_kilometers, (distance / 100) * 1E-1);
+    }
+
     public String toString(@NonNull Resources resources) {
         return resources.getString(R.string.coordinates, latitude * 1E-5, longitude * 1E-5);
     }
