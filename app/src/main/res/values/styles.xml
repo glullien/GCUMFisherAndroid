@@ -2,11 +2,4 @@
 
     <style name="AppTheme" parent="android:Theme.Holo.Light.DarkActionBar" />
 
-    <style name="OverPrint" parent="@android:style/Widget.TextView">
-        <item name="android:textSize">@dimen/overPrintTextSize</item>
-        <item name="android:textColor">@color/overPrint</item>
-        <item name="android:shadowRadius">1</item>
-        <item name="android:textStyle">bold</item>
-    </style>
-
 </resources>

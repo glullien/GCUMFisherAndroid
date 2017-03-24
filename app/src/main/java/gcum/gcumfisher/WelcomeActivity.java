@@ -21,20 +21,16 @@ import android.support.annotation.StringRes;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.FileProvider;
 import android.util.Log;
-import android.view.GestureDetector;
-import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.GridLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import java.io.File;
@@ -428,78 +424,22 @@ public class WelcomeActivity extends Activity {
      * Creates a UI view for a photo
      */
     private View createPhotoView(@NonNull final Photo photo) {
-        final RelativeLayout view = new RelativeLayout(this);
-        final ImageView waitingIcon = new ImageView(this);
-        waitingIcon.setImageResource(android.R.drawable.ic_menu_gallery);
-        view.addView(waitingIcon, getCenterLayoutParams());
+        LayoutInflater inflater = getLayoutInflater();
+        final ViewGroup view = (ViewGroup) inflater.inflate(R.layout.welcome_photo, null);
         view.postDelayed(new Runnable() {
             @Override
             public void run() {
-                view.addView(getImageView(photo), getCenterLayoutParams());
+                final int thumbnailSize = findViewById(R.id.imagesScroll).getHeight() - 20;
+                final Bitmap bitmap = photo.getBitmap(thumbnailSize);
+                ((ImageView) view.findViewById(R.id.photo_view)).setImageBitmap(bitmap);
+
                 final int age = photo.getAge();
-                // Add age on bottom in old image
-                if (age >= 1) view.addView(getAgeView(age), getBottomLayoutParams());
-                view.removeView(waitingIcon);
-                view.setOnTouchListener(new View.OnTouchListener() {
-                    GestureDetector gestureDetector = new GestureDetector(WelcomeActivity.this, new GestureDetector.SimpleOnGestureListener() {
-                        int SWIPE_THRESHOLD = 100;
-                        int SWIPE_VELOCITY_THRESHOLD = 100;
+                ((TextView) view.findViewById(R.id.age)).setText((age < 1) ? "" : getResources().getQuantityString(R.plurals.age, age, age));
 
-                        @Override
-                        public boolean onDown(MotionEvent e) {
-                            return true;
-                        }
-
-                        @Override
-                        public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-                            float diffY = e2.getY() - e1.getY();
-                            float diffX = e2.getX() - e1.getX();
-                            if ((Math.abs(diffX) > Math.abs(diffY)) && (Math.abs(diffX) > SWIPE_THRESHOLD) && (Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD)) {
-                                swipeHorizontally();
-                                return true;
-                            } else if ((Math.abs(diffY) > Math.abs(diffX)) && (Math.abs(diffY) > SWIPE_THRESHOLD) && (Math.abs(velocityY) > SWIPE_VELOCITY_THRESHOLD)) {
-                                swipeVertically();
-                                return true;
-                            } else return super.onFling(e1, e2, velocityX, velocityY);
-                        }
-                    });
-
+                view.findViewById(R.id.trash).setOnClickListener(new View.OnClickListener() {
                     @Override
-                    public boolean onTouch(View v, MotionEvent event) {
-                        return gestureDetector.onTouchEvent(event);
-                    }
-
-                    private void swipeHorizontally() {
-                        swipeVertically();
-                    }
-
-                    private void swipeVertically() {
-                        final LinearLayout buttons = new LinearLayout(WelcomeActivity.this);
-                        buttons.setOrientation(LinearLayout.HORIZONTAL);
-                        final ImageButton remove = new ImageButton(WelcomeActivity.this);
-                        remove.setBackgroundResource(R.color.removeBackground);
-                        remove.setImageResource(android.R.drawable.ic_menu_delete);
-                        remove.setPadding(20, 20, 20, 20);
-                        buttons.addView(remove);
-                        final ImageButton cancel = new ImageButton(WelcomeActivity.this);
-                        cancel.setBackgroundResource(R.color.cancelBackground);
-                        cancel.setPadding(20, 20, 20, 20);
-                        cancel.setImageResource(android.R.drawable.ic_menu_close_clear_cancel);
-                        buttons.addView(cancel);
-                        view.addView(buttons, getCenterLayoutParams());
-
-                        remove.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                removePhoto(photo);
-                            }
-                        });
-                        cancel.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                view.removeView(buttons);
-                            }
-                        });
+                    public void onClick(View v) {
+                        removePhoto(photo);
                     }
                 });
             }
@@ -507,40 +447,6 @@ public class WelcomeActivity extends Activity {
         return view;
     }
 
-    private RelativeLayout.LayoutParams getCenterLayoutParams() {
-        final RelativeLayout.LayoutParams res = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
-        res.addRule(RelativeLayout.CENTER_HORIZONTAL);
-        res.addRule(RelativeLayout.CENTER_VERTICAL);
-        return res;
-    }
-
-    private RelativeLayout.LayoutParams getBottomLayoutParams() {
-        final RelativeLayout.LayoutParams res = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
-        res.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
-        res.addRule(RelativeLayout.ALIGN_PARENT_START);
-        res.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
-        res.setMargins(10, 10, 10, 10);
-        return res;
-    }
-
-    @NonNull
-    private TextView getAgeView(int age) {
-        final TextView ageView = new TextView(this);
-        ageView.setBackgroundResource(R.color.overPrintPanel);
-        ageView.setText(getResources().getQuantityString(R.plurals.age, age, age));
-        ageView.setTextAppearance(this, R.style.OverPrint);
-        ageView.setGravity(Gravity.CENTER_HORIZONTAL);
-        return ageView;
-    }
-
-    @NonNull
-    private ImageView getImageView(@NonNull Photo photo) {
-        final int thumbnailSize = findViewById(R.id.imagesScroll).getHeight() - 20;
-        final Bitmap bitmap = photo.getBitmap(thumbnailSize);
-        final ImageView imageView = new ImageView(this);
-        imageView.setImageBitmap(bitmap);
-        return imageView;
-    }
 
     /**
      * Add a photo in the UI scroll view

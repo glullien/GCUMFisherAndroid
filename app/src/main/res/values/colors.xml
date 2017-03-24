@@ -6,14 +6,9 @@
     <color name="gray">#999999</color>
     <color name="lightGray">#bbb</color>
     <color name="red">#FF4081</color>
-    <color name="fadeBlue">#376aff</color>
-    <color name="transparentBlack">#9FFF</color>
+    <color name="transparentBlack">#6FFF</color>
 
-    <color name="overPrint">@color/black</color>
     <color name="liked">@color/red</color>
-
-    <color name="removeBackground">@color/red</color>
-    <color name="cancelBackground">@color/fadeBlue</color>
 
     <color name="error">@color/red</color>
 
@@ -21,6 +16,5 @@
     <color name="progress">@color/gray</color>
     <color name="photosListBackground">@color/white</color>
     <color name="photosSeparator">@color/gray</color>
-    <color name="overPrintPanel">@color/transparentBlack</color>
 
 </resources>

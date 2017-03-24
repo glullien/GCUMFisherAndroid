@@ -92,7 +92,7 @@
 
         <HorizontalScrollView
             android:id="@+id/imagesScroll"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_alignParentEnd="true"
             android:layout_alignParentRight="true"
@@ -103,7 +103,7 @@
             android:layout_toEndOf="@id/photoButtons"
             android:layout_toRightOf="@id/photoButtons"
             android:background="@android:color/darker_gray"
-            android:fillViewport="true">
+            android:fillViewport="false">
 
             <GridLayout
                 android:id="@+id/images"
