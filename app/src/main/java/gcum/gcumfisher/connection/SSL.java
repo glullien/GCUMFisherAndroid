@@ -23,10 +23,10 @@ import gcum.gcumfisher.R;
 
 class SSL {
     @NonNull
-    static SSLSocketFactory getSSLSocketFactory(@NonNull Resources resources) throws NoSuchAlgorithmException, KeyManagementException, KeyStoreException, IOException, CertificateException {
+    static SSLSocketFactory getSSLSocketFactory(@NonNull Resources resources, @NonNull String url) throws NoSuchAlgorithmException, KeyManagementException, KeyStoreException, IOException, CertificateException {
 
         CertificateFactory cf = CertificateFactory.getInstance("X.509");
-        InputStream caInput = new BufferedInputStream(resources.openRawResource(R.raw.certificate));
+        InputStream caInput = new BufferedInputStream(resources.openRawResource(url.contains("parisestunparking")?R.raw.certificate_peup:R.raw.certificate));
 
         Certificate ca;
         try {

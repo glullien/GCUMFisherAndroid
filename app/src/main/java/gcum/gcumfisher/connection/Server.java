@@ -27,6 +27,7 @@ import java.io.StringWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.security.cert.CertPathValidatorException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -74,6 +75,12 @@ public class Server {
             conn.setDoInput(true);
             return 1 == conn.getInputStream().read(new byte[1]);
         } catch (SSLPeerUnverifiedException e) {
+            Log.e("Server", "Failed test for " + baseUrl, e);
+            return false;
+        } catch (CertPathValidatorException e) {
+            Log.e("Server", "Failed test for " + baseUrl, e);
+            return false;
+        } catch (javax.net.ssl.SSLHandshakeException e) {
             Log.e("Server", "Failed test for " + baseUrl, e);
             return false;
         }
@@ -130,7 +137,7 @@ public class Server {
     private HttpURLConnection getConnection(@NonNull String url) throws Exception {
         HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
         if (conn instanceof HttpsURLConnection)
-            ((HttpsURLConnection) conn).setSSLSocketFactory(SSL.getSSLSocketFactory(resources));
+            ((HttpsURLConnection) conn).setSSLSocketFactory(SSL.getSSLSocketFactory(resources, url));
         return conn;
     }
 
