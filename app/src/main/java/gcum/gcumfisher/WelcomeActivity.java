@@ -314,16 +314,19 @@ public class WelcomeActivity extends Activity {
      * Called by take photo button
      */
     public void takePhoto(View view) {
-        final Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        if (takePictureIntent.resolveActivity(getPackageManager()) == null)
-            displayError(R.string.cannot_take_picture);
-        else try {
-            File photoFile = createImageFile(System.currentTimeMillis(), location);
-            Uri photoURI = FileProvider.getUriForFile(this, "gcum.gcumfisher.fileprovider", photoFile);
-            takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
-            startActivityForResult(takePictureIntent, TAKE_PHOTO_REQUEST);
-        } catch (IOException ex) {
-            displayError(R.string.cannot_save_photo);
+        try {
+            final Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+            if (takePictureIntent.resolveActivity(getPackageManager()) == null)
+                displayError(R.string.cannot_take_picture);
+            else {
+                File photoFile = createImageFile(System.currentTimeMillis(), location);
+                Uri photoURI = FileProvider.getUriForFile(this, "gcum.gcumfisher.fileprovider", photoFile);
+                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+                startActivityForResult(takePictureIntent, TAKE_PHOTO_REQUEST);
+            }
+        } catch (Exception e) {
+            server.startLog(null, "Failed to take photo", e);
+            displayError(getString(R.string.error_message, e.getMessage()));
         }
     }
 
@@ -331,8 +334,13 @@ public class WelcomeActivity extends Activity {
      * Called by pick a photo from gallery button
      */
     public void pickPhoto(View view) {
-        final Intent galleryIntent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-        startActivityForResult(galleryIntent, PICK_PHOTO_REQUEST);
+        try {
+            final Intent galleryIntent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+            startActivityForResult(galleryIntent, PICK_PHOTO_REQUEST);
+        } catch (Exception e) {
+            server.startLog(null, "Failed to pick photo", e);
+            displayError(getString(R.string.error_message, e.getMessage()));
+        }
     }
 
     /**
@@ -352,30 +360,55 @@ public class WelcomeActivity extends Activity {
      */
     private void addNextPhoto() {
         // nextPhoto should not be null, but it's safer to check
-        if (nextPhoto != null) {
+        if (nextPhoto != null) try {
             photos.add(nextPhoto);
             addImageView(nextPhoto);
             updateSendButton();
             updatePhotosCount();
+        } catch (Exception e) {
+            server.startLog(null, "Failed to add photo", e);
+            displayError(getString(R.string.error_message, e.getMessage()));
         }
     }
 
     /**
      * Copy the photo in path into a new file that will be used by addNextPhoto()
      */
-    private void saveAsNextPhoto(@NonNull String path) {
+    private void saveAsNextPhoto(@NonNull final String path) throws IOException {
+        final File source = new File(path);
+        final File f;
         try {
-            File source = new File(path);
-            File f = createImageFile(source.lastModified(), null);
-            FileOutputStream out = new FileOutputStream(f);
-            InputStream in = new FileInputStream(source);
+            f = createImageFile(source.lastModified(), null);
+        } catch (IOException e) {
+            displayError(R.string.error);
+            throw e;
+        }
+        try (FileOutputStream out = new FileOutputStream(f); InputStream in = new FileInputStream(source)) {
             byte[] buf = new byte[1024];
             int len;
             while ((len = in.read(buf)) > 0) out.write(buf, 0, len);
-            in.close();
-            out.close();
         } catch (Exception e) {
             displayError(R.string.cannot_save_photo);
+            throw e;
+        }
+    }
+
+    private void addPickedPhoto(@NonNull final Intent data) {
+        try {
+            final Uri selectedImage = data.getData();
+            final String[] filePathColumn = {MediaStore.Images.Media.DATA};
+            final Cursor cursor = getContentResolver().query(selectedImage, filePathColumn, null, null, null);
+            if (cursor != null) {
+                cursor.moveToFirst();
+                final int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
+                final String imgDecodableString = cursor.getString(columnIndex);
+                cursor.close();
+                saveAsNextPhoto(imgDecodableString);
+                addNextPhoto();
+            }
+        } catch (Exception e) {
+            server.startLog(null, "Failed to save picked photo", e);
+            displayError(getString(R.string.error_message, e.getMessage()));
         }
     }
 
@@ -389,19 +422,7 @@ public class WelcomeActivity extends Activity {
                 if (resultCode == RESULT_OK) addNextPhoto();
                 break;
             case PICK_PHOTO_REQUEST:
-                if ((resultCode == RESULT_OK) && (data != null)) {
-                    Uri selectedImage = data.getData();
-                    String[] filePathColumn = {MediaStore.Images.Media.DATA};
-                    Cursor cursor = getContentResolver().query(selectedImage, filePathColumn, null, null, null);
-                    if (cursor != null) {
-                        cursor.moveToFirst();
-                        int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
-                        String imgDecodableString = cursor.getString(columnIndex);
-                        cursor.close();
-                        saveAsNextPhoto(imgDecodableString);
-                        addNextPhoto();
-                    }
-                }
+                if ((resultCode == RESULT_OK) && (data != null)) addPickedPhoto(data);
                 break;
             case ADJUST_LOCATION_REQUEST:
                 switch (resultCode) {
