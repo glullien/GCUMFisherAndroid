@@ -61,6 +61,7 @@ public class ListActivity extends Activity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.list);
+        server = new Server(getResources());
 
         ((ViewGroup) findViewById(R.id.images)).removeAllViews();
         photoToLoad.clear();
@@ -83,7 +84,6 @@ public class ListActivity extends Activity {
             final double longitude = intent.getDoubleExtra(HERE_LONGITUDE, Double.NaN);
             here = (Double.isNaN(latitude) || Double.isNaN(longitude)) ? null : new Point(latitude, longitude);
         }
-        server = new Server(getResources());
     }
 
     @Override
