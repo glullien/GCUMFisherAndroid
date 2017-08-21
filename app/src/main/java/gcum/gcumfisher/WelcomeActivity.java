@@ -102,6 +102,8 @@ public class WelcomeActivity extends Activity {
 
     private Server server;
 
+    private boolean cannotDisplayPhoto;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -299,7 +301,7 @@ public class WelcomeActivity extends Activity {
      * Enabled send button if we've got a spot and at least one photo
      */
     private void updateSendButton() {
-        findViewById(R.id.send).setEnabled((!photos.isEmpty()) && (!isSendingPhoto()) && (getAddress() != null) && isConnected());
+        findViewById(R.id.send).setEnabled((!photos.isEmpty()) && (!isSendingPhoto()) && (getAddress() != null) && isConnected() && (!cannotDisplayPhoto));
     }
 
     /**
@@ -310,10 +312,35 @@ public class WelcomeActivity extends Activity {
         ((TextView) findViewById(R.id.photosCount)).setText(nb.format(photos.size()));
     }
 
+    private static final int REQUEST_EXTERNAL_STORAGE = 1;
+    private static String[] PERMISSIONS_STORAGE = {
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE
+    };
+
+    /**
+     * Checks if the app has permission to write to device storage
+     * If the app does not has permission then the user will be prompted to grant permissions
+     */
+    public static void verifyStoragePermissions(Activity activity) {
+        // Check if we have write permission
+        int permission = ActivityCompat.checkSelfPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+
+        if (permission != PackageManager.PERMISSION_GRANTED) {
+            // We don't have permission so prompt the user
+            ActivityCompat.requestPermissions(
+                    activity,
+                    PERMISSIONS_STORAGE,
+                    REQUEST_EXTERNAL_STORAGE
+            );
+        }
+    }
+
     /**
      * Called by take photo button
      */
     public void takePhoto(View view) {
+        verifyStoragePermissions(this);
         try {
             final Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
             if (takePictureIntent.resolveActivity(getPackageManager()) == null)
@@ -334,6 +361,7 @@ public class WelcomeActivity extends Activity {
      * Called by pick a photo from gallery button
      */
     public void pickPhoto(View view) {
+        verifyStoragePermissions(this);
         try {
             final Intent galleryIntent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
             startActivityForResult(galleryIntent, PICK_PHOTO_REQUEST);
@@ -452,7 +480,16 @@ public class WelcomeActivity extends Activity {
             public void run() {
                 final int thumbnailSize = findViewById(R.id.imagesScroll).getHeight() - 20;
                 final Bitmap bitmap = photo.getBitmap(thumbnailSize);
-                ((ImageView) view.findViewById(R.id.photo_view)).setImageBitmap(bitmap);
+                final ImageView imageView = ((ImageView) view.findViewById(R.id.photo_view));
+                if (bitmap != null) imageView.setImageBitmap(bitmap);
+                else {
+                    imageView.setImageDrawable(getResources().getDrawable(R.drawable.error, null));
+                    if (!cannotDisplayPhoto) {
+                        cannotDisplayPhoto = true;
+                        updateSendButton();
+                        displayError(R.string.cannot_display_photo);
+                    }
+                }
 
                 final int age = photo.getAge();
                 ((TextView) view.findViewById(R.id.age)).setText((age < 1) ? "" : getResources().getQuantityString(R.plurals.age, age, age));
@@ -648,7 +685,7 @@ public class WelcomeActivity extends Activity {
     public void send(View view) {
         try {
             final Spot address = getAddress();
-            if ((address != null) && isConnected() && !photos.isEmpty()) {
+            if ((address != null) && isConnected() && (!photos.isEmpty()) && (!cannotDisplayPhoto)) {
                 sendReportReceiver = new SendReportReceiver(new Handler(), this);
                 Intent intent = new Intent(this, SendingReportService.class);
                 intent.putExtra(SendingReportService.RECEIVER, sendReportReceiver);

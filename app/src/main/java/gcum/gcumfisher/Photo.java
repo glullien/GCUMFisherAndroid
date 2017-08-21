@@ -15,7 +15,7 @@ import java.util.TimeZone;
 
 import gcum.gcumfisher.connection.Point;
 
-public class Photo {
+class Photo {
     @NonNull
     private final String path;
 
@@ -83,8 +83,10 @@ public class Photo {
      * Get a resized (keep ratio) and correctly oriented bitmap
      * @param maxSize maximum width and height
      */
+    @Nullable
     Bitmap getBitmap(final int maxSize) {
         final Bitmap fullSize = getBitmap();
+        if (fullSize == null) return null;
         final Bitmap resized;
         final int width = fullSize.getWidth();
         final int height = fullSize.getHeight();
@@ -98,8 +100,10 @@ public class Photo {
     /**
      * Get a correctly oriented bitmap
      */
+    @Nullable
     private Bitmap getBitmap() {
         final Bitmap brut = BitmapFactory.decodeFile(path);
+        if (brut == null) return null;
         final Bitmap res;
         final int orientation = getOrientation();
         if ((orientation <= 0) || (orientationToAngle.length <= orientation)) res = brut;

@@ -27,6 +27,7 @@
     <string name="cannot_take_picture">Appareil photo non trouvé</string>
     <string name="cannot_create_tmp_file">Impossible de créer une image temporaire</string>
     <string name="cannot_save_photo">Erreur d\'écriture</string>
+    <string name="cannot_display_photo">Impossible d\'afficher la photo</string>
     <plurals name="age">
         <item quantity="one">%d jour</item>
         <item quantity="other">%d jours</item>
